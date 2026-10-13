@@ -23,13 +23,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 403 })
   }
 
-  const { data: ok } = await sb.rpc('record_download', { p_purchase_id: t.purchase_id, p_user_id: t.user_id, p_ip: null, p_ua: null })
-  if (!ok) {
-    console.warn(`[download] purchase ${t.purchase_id} hit its download limit — record_download returned false`)
-    return NextResponse.json({ error: 'LIMIT_REACHED' }, { status: 403 })
-  }
-  await sb.from('download_tokens').update({ used_at: new Date().toISOString() }).eq('id', t.id)
-
   // '42703' (raw Postgres "undefined column") is what a SELECT on a missing
   // column returns — verified live against this project. Both selects below
   // fall back to their pre-bilingual column set on that error so a download
@@ -80,6 +73,18 @@ export async function GET(request: NextRequest) {
   if (!(signed as any)?.signedUrl) {
     console.error(`[download] failed to create signed URL for ${filePath}: ${signErr?.message ?? 'no signedUrl returned'}`)
     return NextResponse.json({ error: 'Storage error' }, { status: 500 })
+  }
+
+  // Only consume quota after Storage has prepared the download. The RPC
+  // locks and rechecks both token and purchase, and consumes them in one
+  // transaction so concurrent requests cannot reuse a single-use token.
+  const { data: consumption, error: consumeError } = await sb.rpc('consume_download_token', { p_token: token })
+  if (consumeError) {
+    console.error(`[download] could not consume download token: ${consumeError.code ?? 'database error'}`)
+    return NextResponse.json({ error: 'Download unavailable' }, { status: 500 })
+  }
+  if (consumption !== 'ok') {
+    return NextResponse.json({ error: consumption === 'limit_reached' ? 'LIMIT_REACHED' : 'Invalid token' }, { status: 403 })
   }
 
   console.log(`[download] purchase ${t.purchase_id} (language=${languageCode}) downloading ${filePath} — redirecting to signed URL (expires in 1h)`)
