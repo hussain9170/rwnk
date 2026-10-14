@@ -1,0 +1,10 @@
+<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;color:#1A1228">
+<h2>استرجاع كلمة المرور — رونق</h2>
+<p>وصلنا طلب لتعيين كلمة مرور جديدة لحسابك. اضغطي الرابط التالي ثم متابعة.</p>
+{{ if eq .RedirectTo "https://rwnk-kohl.vercel.app/auth/callback" }}
+<p><a href="https://rwnk-kohl.vercel.app/auth/recovery?token_hash={{ .TokenHash }}">تعيين كلمة مرور جديدة</a></p>
+{{ else }}
+<p><a href="{{ .ConfirmationURL }}">تعيين كلمة مرور جديدة</a></p>
+{{ end }}
+<p>إذا ما طلبتِ تغيير كلمة المرور، تجاهلي هالرسالة.</p>
+</div>
