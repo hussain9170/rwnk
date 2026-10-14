@@ -8,6 +8,20 @@
 // fatal" contract src/lib/email.ts uses server-side for Resend.
 export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
+// Keep campaign attribution; never forward auth, recovery or purchase-link tokens.
+export const ANALYTICS_QUERY_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id', 'gclid', 'dclid', 'gbraid', 'wbraid']
+export function analyticsLocation(rawUrl: string, origin: string): string {
+  const url = new URL(rawUrl, origin)
+  const query = new URLSearchParams()
+  for (const key of ANALYTICS_QUERY_KEYS) {
+    const value = url.searchParams.get(key)
+    if (value) query.set(key, value)
+  }
+  url.search = query.toString()
+  url.hash = ''
+  return url.toString()
+}
+
 declare global {
   interface Window {
     dataLayer: unknown[]
@@ -22,7 +36,10 @@ function callGtag(...args: unknown[]) {
 
 export function pageview(url: string) {
   if (!GA_MEASUREMENT_ID) return
-  callGtag('event', 'page_view', { page_path: url })
+  if (typeof window === 'undefined') return
+  const location = analyticsLocation(url, window.location.origin)
+  callGtag('set', { page_location: location })
+  callGtag('event', 'page_view', { page_path: new URL(location).pathname, page_location: location })
 }
 
 // Any admin-configured book_languages.language_code, not just 'ar'/'en' —
