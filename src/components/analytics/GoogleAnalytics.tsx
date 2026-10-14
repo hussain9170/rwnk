@@ -1,16 +1,12 @@
 'use client'
 
-// Loads gtag.js globally (root layout only — see src/app/layout.tsx) and
-// tracks page_view on every App Router navigation, including client-side
-// transitions (gtag's own history-based auto page_view only fires for full
-// page loads unless Enhanced Measurement's SPA tracking is verified on in
-// the GA4 property, which can't be guaranteed here) — so page_view is sent
-// manually and `send_page_view: false` disables the automatic firing to
-// avoid a duplicate on first load.
+// Track App Router page views manually. In the GA4 web stream, disable
+// Enhanced Measurement's history-change page views to prevent duplicates:
+// send_page_view:false only suppresses the initial automatic config event.
 import Script from 'next/script'
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { GA_MEASUREMENT_ID, pageview } from '@/lib/gtag'
+import { GA_MEASUREMENT_ID, ANALYTICS_QUERY_KEYS, pageview } from '@/lib/gtag'
 
 // useSearchParams() opts any component that calls it into client-side
 // rendering unless wrapped in its own Suspense boundary — isolated here so
@@ -19,10 +15,14 @@ import { GA_MEASUREMENT_ID, pageview } from '@/lib/gtag'
 function PageViewTracker() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const lastPage = useRef<string | null>(null)
 
   useEffect(() => {
     const query = searchParams.toString()
-    pageview(query ? `${pathname}?${query}` : pathname)
+    const url = query ? `${pathname}?${query}` : pathname
+    if (lastPage.current === url) return
+    lastPage.current = url
+    pageview(url)
   }, [pathname, searchParams])
 
   return null
@@ -50,6 +50,19 @@ export default function GoogleAnalytics() {
           function gtag(){window.dataLayer.push(arguments);}
           window.gtag = gtag;
           gtag('js', new Date());
+          function safeAnalyticsUrl(raw) {
+            if (!raw) return '';
+            var url = new URL(raw, window.location.origin);
+            var query = new URLSearchParams();
+            ${JSON.stringify(ANALYTICS_QUERY_KEYS)}.forEach(function(key) {
+              var value = url.searchParams.get(key);
+              if (value) query.set(key, value);
+            });
+            url.search = query.toString();
+            url.hash = '';
+            return url.toString();
+          }
+          gtag('set', { page_location: safeAnalyticsUrl(window.location.href), page_referrer: safeAnalyticsUrl(document.referrer) });
           gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });
         `}
       </Script>
