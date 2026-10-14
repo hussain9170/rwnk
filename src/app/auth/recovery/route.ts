@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
-const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'", 'X-Content-Type-Options': 'nosniff' }
+const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'strict-origin', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'", 'X-Content-Type-Options': 'nosniff' }
 
 // Opening an email (or an email scanner's GET) never consumes its single-use token.
 export async function GET(request: NextRequest) {
@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const origin = new URL(request.url).origin
+  // Use the configured public origin rather than the deployment proxy's URL.
+  const origin = new URL(process.env.NEXT_PUBLIC_APP_URL || request.url).origin
   if (request.headers.get('origin') !== origin) return NextResponse.json({ error: 'Invalid request' }, { status: 403, headers })
   let token: string
   try { token = String((await request.formData()).get('token_hash') ?? '') }
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Recovery only: no PKCE verifier from the original browser is required.
     const { error } = await supabase.auth.verifyOtp({ token_hash: token, type: 'recovery' })
     if (!error) {
-      const response = NextResponse.redirect(new URL('/reset-password', request.url), 303)
+      const response = NextResponse.redirect(new URL('/reset-password', origin), 303)
       Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value))
       return response
     }

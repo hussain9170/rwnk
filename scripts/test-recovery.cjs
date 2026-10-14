@@ -7,10 +7,12 @@ const deps={'next/server':{NextResponse:Response},'next/headers':{cookies:async(
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/app/auth/recovery/route.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports:mod.exports,require:n=>deps[n],URL,Headers,process})
 function request(value=token,origin='https://rwnak.test'){return{url:'https://rwnak.test/auth/recovery?token_hash='+encodeURIComponent(value),headers:new Headers(origin?{origin}:{}),formData:async()=>new Map([['token_hash',value]])}}
 ;(async()=>{
-const get=await mod.exports.GET(request());assert.equal(calls,0,'email scanners must not consume tokens');assert.ok(get.body.includes('method="post"'));assert.equal(get.headers.get('Referrer-Policy'),'no-referrer')
+const get=await mod.exports.GET(request());assert.equal(calls,0,'email scanners must not consume tokens');assert.ok(get.body.includes('method="post"'));assert.equal(get.headers.get('Referrer-Policy'),'strict-origin')
 assert.ok((await mod.exports.GET(request('<script>'))).url.includes('auth_failed'))
 const ok=await mod.exports.POST(request());assert.equal(ok.status,303);assert.equal(ok.url,'https://rwnak.test/reset-password');assert.equal(writes.length,1,'persist the recovery session in the new browser')
+process.env.NEXT_PUBLIC_APP_URL='https://rwnak.test'
+const proxied=request();proxied.url='http://internal:3000/auth/recovery';assert.equal((await mod.exports.POST(proxied)).url,'https://rwnak.test/reset-password','use public origin behind a deployment proxy')
 const before=calls;assert.equal((await mod.exports.POST(request(token,'https://evil.test'))).status,403);assert.equal(calls,before)
-otpError={code:'otp_expired'};assert.ok((await mod.exports.POST(request())).url.includes('auth_failed'));assert.equal(writes.length,1)
+otpError={code:'otp_expired'};assert.ok((await mod.exports.POST(request())).url.includes('auth_failed'));assert.equal(writes.length,2)
 console.log('PASS: cross-browser recovery verification, session cookies, scanner-safe GET, invalid token and cross-origin POST rejection, expired link')
 })().catch(e=>{console.error(e);process.exitCode=1})
