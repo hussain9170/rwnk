@@ -11,32 +11,47 @@ const CHAPTERS=[{n:1,title:'أسس التنظيف الاحترافي',status:'do
 export default function LibraryPage() {
   const [library,setLibrary]=useState<any[]>([])
   const [loading,setLoading]=useState(true)
+  const [loadError,setLoadError]=useState('')
+  const [retry,setRetry]=useState(0)
   const [dlState,setDlState]=useState<Record<string,string>>({})
   useEffect(()=>{
+    let active=true
     async function load(){
-      const {data:{user}}=await supabase.auth.getUser()
-      if(!user){window.location.href='/login';return}
       try{
-        const {data:lib}=await (supabase as any).from('user_library').select('*').order('created_at',{ascending:false})
-        setLibrary(lib??[])
+        const {data:{user},error:authError}=await supabase.auth.getUser()
+        if(authError && authError.name!=='AuthSessionMissingError') throw authError
+        if(!user){window.location.href='/login';return}
+        const {data:lib,error}=await (supabase as any).from('user_library').select('*').order('created_at',{ascending:false})
+        if(error) throw error
+        if(active){setLibrary(lib??[]);setLoadError('')}
       }catch{
-        const {data:p}=await (supabase as any).from('user_purchases').select('*')
-        setLibrary(p??[])
+        if(active) setLoadError('تعذّر عرض مشترياتك الآن. يرجى إعادة المحاولة.')
+      }finally{
+        if(active) setLoading(false)
       }
-      setLoading(false)
     }
     load()
-  },[])
+    // Re-read the server's counter after the customer returns from a download.
+    window.addEventListener('focus',load)
+    return ()=>{active=false;window.removeEventListener('focus',load)}
+  },[retry])
   async function handleDownload(item:any){
+    // Open while the click still has user activation; waiting for the token can
+    // cause mobile browsers to block the new tab.
+    const downloadWindow=window.open('about:blank','_blank')
+    if(downloadWindow) downloadWindow.opener=null
     setDlState(s=>({...s,[item.id]:'loading'}))
     try{
       const token=await generateDownloadTokenSafe(item.id)
-      window.open(`/api/download?token=${token}`,'_blank')
-      setLibrary(lib=>lib.map(p=>p.id===item.id?{...p,downloads_used:(p.downloads_used??0)+1,downloads_remaining:(p.downloads_remaining??5)-1}:p))
-      setDlState(s=>({...s,[item.id]:'idle'}))
+      const url=`/api/download?token=${encodeURIComponent(token)}`
+      if(downloadWindow && !downloadWindow.closed) downloadWindow.location.href=url
+      else window.location.href=url
+      // Only the server records successful downloads. Do not decrement here.
     }catch(err:any){
+      downloadWindow?.close()
       if(err.message==='LIMIT_REACHED') alert('استنفذتِ عدد التحميلات. تواصلي معنا.')
-      else alert('حدث خطأ في التحميل')
+      else alert('حدث خطأ في التحميل. يرجى إعادة المحاولة.')
+    }finally{
       setDlState(s=>({...s,[item.id]:'idle'}))
     }
   }
@@ -55,7 +70,10 @@ export default function LibraryPage() {
             <h1 style={{fontSize:26,fontWeight:900,color:T1}}>مكتبتي </h1>
             <span style={{fontSize:13,color:T3}}>{library.length} منتج</span>
           </div>
-          {library.length===0?<div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:20,padding:'48px 32px',textAlign:'center'}}>
+          {loadError?<div role="alert" style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:20,padding:32,textAlign:'center'}}>
+            <p style={{color:T2,marginBottom:16}}>{loadError}</p>
+            <button onClick={()=>{setLoading(true);setRetry(n=>n+1)}} style={{background:P,color:'#fff',border:0,borderRadius:10,padding:'12px 24px',cursor:'pointer'}}>إعادة المحاولة</button>
+          </div>:library.length===0?<div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:20,padding:'48px 32px',textAlign:'center'}}>
             
             <h2 style={{fontSize:18,fontWeight:900,color:T1,marginBottom:8}}>مكتبتك فارغة</h2>
             <p style={{fontSize:13,color:T3,marginBottom:24}}>لم تشتري أي منتج بعد</p>

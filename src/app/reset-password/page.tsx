@@ -11,7 +11,7 @@ import { IconLock, IconCircleCheck, IconAlertTriangle } from '@tabler/icons-reac
 
 const FONT = "var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif"
 
-type Step = 'checking' | 'invalid' | 'form' | 'done'
+type Step = 'checking' | 'invalid' | 'form' | 'done' | 'error'
 
 // Landing page for the "نسيت كلمة المرور؟" email link. By the time this
 // page renders, /auth/callback has already exchanged the recovery code for
@@ -31,9 +31,12 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     let active = true
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error && error.name !== 'AuthSessionMissingError') throw error
       if (!active) return
       setStep(user ? 'form' : 'invalid')
+    }).catch(err => {
+      if (active) { setError(mapAuthError(err)); setStep('error') }
     })
     return () => { active = false }
   }, [])
@@ -64,6 +67,11 @@ export default function ResetPasswordPage() {
           {step === 'checking' && (
             <div style={{ textAlign: 'center', padding: '20px 0', color: C.text3, fontSize: 14 }}>جاري التحقق من الرابط...</div>
           )}
+
+          {step === 'error' && <div role="alert" style={{ textAlign: 'center' }}>
+            <p style={{ color: C.text1, marginBottom: 16 }}>{error}</p>
+            <button onClick={() => window.location.reload()} style={{ color: C.primary, cursor: 'pointer' }}>إعادة المحاولة</button>
+          </div>}
 
           {step === 'invalid' && (
             <div style={{ textAlign: 'center' }}>
