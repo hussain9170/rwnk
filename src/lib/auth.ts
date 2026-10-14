@@ -57,7 +57,7 @@ export async function signOut() {
 
 export async function resetPassword(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${APP_URL}/auth/callback?next=/reset-password`,
+    redirectTo: `${APP_URL}/auth/callback`,
   })
   if (error) throw error
 }
@@ -95,7 +95,7 @@ export async function createAccountAfterPurchase(email: string, password: string
     // purchase, or via /register) — never overwritten. Send a reset link
     // instead so the customer proves they own the inbox before anything
     // about their credentials changes.
-    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${APP_URL}/auth/callback?next=/reset-password` })
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${APP_URL}/auth/callback` })
     return { alreadyExists: true, user: null }
   }
 
