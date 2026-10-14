@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { tajawal } from '@/lib/font'
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
+import MetaPixel from '@/components/analytics/MetaPixel'
 import './globals.css'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rwnk.co'
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl" className={tajawal.variable}>
       <body>
         <GoogleAnalytics />
+        <MetaPixel />
         {children}
       </body>
     </html>
