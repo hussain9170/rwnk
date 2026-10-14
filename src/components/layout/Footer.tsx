@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { C } from '@/lib/theme'
 import { DEFAULT_SETTINGS, type StoreSettings } from '@/lib/store-settings'
 import {
-  IconBrandInstagram, IconBrandTwitter, IconBrandWhatsapp,
+  IconBrandInstagram, IconBrandTwitter,
   IconShieldCheck, IconBolt,
 } from '@tabler/icons-react'
 
@@ -21,7 +21,6 @@ function buildLinks(S: StoreSettings) {
       { label: 'دخول العملاء',     href: '/login'     },
     ],
     'الدعم': [
-      { label: 'واتساب',           href: `https://wa.me/${S.whatsapp.replace(/\D/g,'')}` },
       { label: 'من نحن',           href: '/about'   },
       { label: 'الأسئلة الشائعة', href: '/faq'     },
       { label: 'سياسة الخصوصية',  href: '/privacy' },
@@ -35,7 +34,6 @@ function buildSocial(S: StoreSettings) {
   return [
     { icon: IconBrandInstagram, href: `https://instagram.com/${S.instagram.replace('@','')}`, label: 'انستغرام' },
     { icon: IconBrandTwitter,   href: `https://twitter.com/${S.twitter.replace('@','')}`,    label: 'تويتر'    },
-    { icon: IconBrandWhatsapp,  href: `https://wa.me/${S.whatsapp.replace(/\D/g,'')}`,      label: 'واتساب'   },
   ]
 }
 
