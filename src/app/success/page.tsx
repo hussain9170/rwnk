@@ -9,7 +9,7 @@ import { C } from '@/lib/theme'
 import { getStoreSettings, DEFAULT_SETTINGS, type StoreSettings } from '@/lib/store-settings'
 import {
   IconCircleCheck, IconDownload, IconArrowRight,
-  IconFileText, IconLock, IconUser, IconAlertTriangle, IconBrandWhatsapp,
+  IconFileText, IconLock, IconUser, IconAlertTriangle,
 } from '@tabler/icons-react'
 import { trackPurchase, trackDownloadBook, hasTrackedPurchase, markPurchaseTracked } from '@/lib/gtag'
 
@@ -337,14 +337,6 @@ export default function SuccessPage() {
               الذهاب إلى مكتبتي
               <IconArrowRight size={15} />
             </Link>
-            <a href={`https://wa.me/${settings.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" style={{
-              display:'flex', alignItems:'center', justifyContent:'center', gap:8,
-              flex:'1 1 160px', height:44, background:'#E1F5EE', border:'1px solid #C4EBDD', borderRadius:12,
-              fontSize:13, fontWeight:700, color:'#085041', textDecoration:'none',
-            }}>
-              <IconBrandWhatsapp size={16} />
-              تواصلي مع الدعم
-            </a>
           </div>
 
           <p style={{ textAlign:'center', fontSize:11, color:C.text3, marginTop:12 }}>
