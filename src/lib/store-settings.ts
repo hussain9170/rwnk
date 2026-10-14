@@ -53,7 +53,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   product_original_price: 7,
   product_currency: 'KWD',
   product_id:       'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  whatsapp:         '+96500000000',
+  whatsapp:         '',
   email:            'info@rwnak.net',
   instagram:        '@rwnak.official',
   twitter:          '@rwnk',
