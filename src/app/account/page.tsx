@@ -10,22 +10,34 @@ export default function AccountPage() {
   const [user,setUser]=useState<any>(null)
   const [profile,setProfile]=useState<any>(null)
   const [purchases,setPurchases]=useState<any[]>([])
+  const [loadError,setLoadError]=useState('')
+  const [retry,setRetry]=useState(0)
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [editMode,setEditMode]=useState(false)
   const [form,setForm]=useState({full_name:'',phone:''})
   useEffect(()=>{
+    let active=true
     async function load(){
-      const {data:{user}}=await supabase.auth.getUser()
-      if(!user){window.location.href='/login';return}
-      setUser(user)
-      const {data:p}=await (supabase as any).from('profiles').select('*').eq('id',user.id).single()
-      if(p){setProfile(p);setForm({full_name:p.full_name??'',phone:p.phone??''})}
-      try{const {data:pu}=await (supabase as any).from('user_library').select('*');setPurchases(pu??[])}catch{}
-      setLoading(false)
+      try{
+        const {data:{user},error:authError}=await supabase.auth.getUser()
+        if(authError && authError.name!=='AuthSessionMissingError') throw authError
+        if(!user){window.location.href='/login';return}
+        const {data:p,error:profileError}=await (supabase as any).from('profiles').select('*').eq('id',user.id).maybeSingle()
+        if(profileError) throw profileError
+        const {data:pu,error}=await (supabase as any).from('user_library').select('*')
+        if(error) throw error
+        if(active){
+          setUser(user);setProfile(p);setForm({full_name:p?.full_name??'',phone:p?.phone??''})
+          setPurchases(pu??[]);setLoadError('')
+        }
+      }catch{
+        if(active) setLoadError('تعذّر عرض حسابك ومشترياتك الآن. يرجى إعادة المحاولة.')
+      }finally{if(active) setLoading(false)}
     }
     load()
-  },[])
+    return ()=>{active=false}
+  },[retry])
   async function handleSave(){
     if(!user) return
     setSaving(true)
@@ -34,6 +46,7 @@ export default function AccountPage() {
     finally{setSaving(false)}
   }
   if(loading) return <div style={{height:'100vh',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",color:T3}}>جاري التحميل...</div>
+  if(loadError) return <><Navbar/><main style={{padding:'120px 24px',textAlign:'center'}}><p role="alert">{loadError}</p><button onClick={()=>{setLoading(true);setRetry(n=>n+1)}}>إعادة المحاولة</button></main></>
   const name=profile?.full_name||user?.email?.split('@')[0]||'مستخدم'
   const inp:React.CSSProperties={width:'100%',height:44,background:'#FAFAFA',border:`1px solid ${BR}`,borderRadius:10,padding:'0 12px',fontSize:13,color:T1,outline:'none',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif"}
   const focus=(e:React.FocusEvent<HTMLInputElement>)=>{e.target.style.borderColor=P;e.target.style.boxShadow='0 0 0 3px rgba(103,71,178,.1)'}

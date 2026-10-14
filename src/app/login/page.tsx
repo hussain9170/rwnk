@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { signIn, signInWithGoogle, isValidEmail, mapAuthError, getCurrentUser, resetPassword } from '@/lib/auth'
 import { C } from '@/lib/theme'
+import { safeAuthPath } from '@/lib/auth-redirect'
 import {
   IconMail, IconEye, IconEyeOff,
   IconShieldCheck, IconBolt,
@@ -24,7 +25,7 @@ export default function LoginPage() {
       if (!active) return
       if (user) {
         const next = new URLSearchParams(window.location.search).get('next')
-        window.location.href = next || '/library'
+        window.location.href = safeAuthPath(next)
       } else {
         // /auth/callback lands here with ?error=auth_failed when a
         // password-reset or email-confirmation link couldn't be exchanged
@@ -37,6 +38,8 @@ export default function LoginPage() {
         }
         setChecking(false)
       }
+    }).catch(err => {
+      if (active) { setError(mapAuthError(err)); setChecking(false) }
     })
     return () => { active = false }
   }, [])
@@ -64,7 +67,7 @@ export default function LoginPage() {
     try {
       await signIn(email, password)
       const next = new URLSearchParams(window.location.search).get('next')
-      window.location.href = next || '/library'
+      window.location.href = safeAuthPath(next)
     } catch (err) {
       setError(mapAuthError(err))
     } finally { setLoading(false) }
