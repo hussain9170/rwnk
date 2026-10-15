@@ -22,7 +22,11 @@ function isPublicPixelUrl(raw: string) {
   const url = new URL(raw, window.location.origin)
   if (/^\/(auth|login|register|reset-password|account|library|admin|success|api)(\/|$)/.test(url.pathname)) return false
   if (url.hash) return false
-  return Array.from(url.searchParams.keys()).every(key => ANALYTICS_QUERY_KEYS.includes(key) || key === 'ScCid')
+  return Array.from(url.searchParams.keys()).every(key => {
+    if (ANALYTICS_QUERY_KEYS.includes(key)) return true
+    // These UUID parameters are issued by Snap's click attribution/test tools.
+    return ['ScCid', 'ScTestModeId'].includes(key) && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(url.searchParams.get(key) ?? '')
+  })
 }
 
 export default function SnapPixel() {
