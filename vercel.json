@@ -1,0 +1,3 @@
+{
+  "crons": [{ "path": "/api/cron/snap-conversions", "schedule": "0 4 * * *" }]
+}

@@ -4,6 +4,8 @@ import Script from 'next/script'
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { ANALYTICS_QUERY_KEYS } from '@/lib/gtag'
+import { hasSnapConsent, subscribeSnapConsent } from '@/lib/snap-consent'
+import { useSyncExternalStore } from 'react'
 
 const PIXEL_ID = '92c5f03d-414c-48be-9bf2-12bbb0fbdbf4'
 type SnapQueue = ((...args: unknown[]) => void) & {
@@ -31,13 +33,17 @@ function isPublicPixelUrl(raw: string) {
 
 export default function SnapPixel() {
   const pathname = usePathname()
-  const [load, setLoad] = useState(false)
+  const consent = useSyncExternalStore(subscribeSnapConsent, hasSnapConsent, () => false)
+  const publicLocation = useSyncExternalStore(subscribeSnapConsent, () => isPublicPixelUrl(window.location.href) && isPublicPixelUrl(document.referrer), () => false)
+  const load = consent && publicLocation
   const [ready, setReady] = useState(false)
   const initialized = useRef(false)
   const lastPage = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!isPublicPixelUrl(window.location.href) || !isPublicPixelUrl(document.referrer)) {
+    if (!consent || !isPublicPixelUrl(window.location.href) || !isPublicPixelUrl(document.referrer)) {
+      // Stop the previously loaded SDK when entering private account routes.
+      if (initialized.current) window.location.reload()
       lastPage.current = null
       return
     }
@@ -48,7 +54,8 @@ export default function SnapPixel() {
       }, { queue: [] as unknown[][] })
       window.snaptr = queue
     }
-    setLoad(true)
+    const click = new URL(window.location.href).searchParams.get('ScCid')
+    if (click && /^[0-9a-f-]{36}$/i.test(click)) document.cookie = `rwnak_snap_click=${click}; Path=/; Max-Age=2592000; SameSite=Lax; Secure`
     if (!ready) return
     if (!initialized.current) {
       // No email, phone number or customer identity is passed to the SDK.
@@ -57,9 +64,10 @@ export default function SnapPixel() {
     }
     if (lastPage.current !== pathname) {
       window.snaptr('track', 'PAGE_VIEW')
+      if (pathname === '/checkout') window.snaptr('track', 'VIEW_CONTENT')
       lastPage.current = pathname
     }
-  }, [pathname, ready])
+  }, [pathname, ready, consent])
 
   return load ? <Script id="rwnak-snap-pixel" src="https://sc-static.net/scevent.min.js" strategy="afterInteractive" onReady={() => setReady(true)} /> : null
 }

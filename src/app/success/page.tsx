@@ -14,6 +14,7 @@ import {
 import { trackPurchase, trackDownloadBook, hasTrackedPurchase, markPurchaseTracked } from '@/lib/gtag'
 
 interface PurchaseInfo {
+  tracking_id: string
   id: string
   invoice_number: string | null
   email: string
@@ -121,7 +122,7 @@ export default function SuccessPage() {
     if (step !== 'success' || !info || info.status !== 'completed' || !settingsLoaded) return
     if (hasTrackedPurchase(info.id)) return
     trackPurchase({
-      transaction_id: info.invoice_number ?? info.id,
+      transaction_id: info.tracking_id,
       value: info.amount,
       currency: info.currency,
       item_id: info.product_id ?? settings.product_id,

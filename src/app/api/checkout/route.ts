@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerEnv } from '@/lib/env'
 import { insertWithSchemaFallback, getSingletonRow, isMissingTableError } from '@/lib/db-resilience'
+import { SNAP_CONSENT_COOKIE, parseSnapConsent } from '@/lib/snap-consent'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,6 +112,19 @@ export async function POST(request: NextRequest) {
   }
 
   console.log(`[checkout] pending purchase created — id=${purchase.id} email=${email} amount=${purchase.amount} ${purchase.currency} method=${paymentMethod} language=${bookLanguage}`)
+
+  // Failure to record optional advertising consent must never block payment.
+  const consent = parseSnapConsent(request.cookies.get(SNAP_CONSENT_COOKIE)?.value)
+  if (consent?.granted && request.headers.get('sec-gpc') !== '1') {
+    try {
+      const uuid = (v: string | undefined) => v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v) ? v : null
+      const { error } = await sb.from('snap_purchase_outbox').insert({
+        purchase_id: purchase.id, consent_id: consent.receipt, consent_version: consent.version, consent_at: consent.at,
+        sc_click_id: uuid(request.cookies.get('rwnak_snap_click')?.value), sc_cookie1: uuid(request.cookies.get('_scid')?.value),
+      })
+      if (error) console.warn('[snap/consent] receipt not recorded', error.code)
+    } catch { console.warn('[snap/consent] unavailable; checkout unaffected') }
+  }
 
   return NextResponse.json({ purchaseId: purchase.id, amount: purchase.amount, currency: purchase.currency })
 }

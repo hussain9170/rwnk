@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerEnv } from '@/lib/env'
+import { snapOrderId } from '@/lib/snap-capi'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,5 +54,5 @@ export async function GET(request: NextRequest) {
     if (lang) languageNames = lang
   }
 
-  return NextResponse.json({ data: { ...purchase, language_name_ar: languageNames?.name_ar ?? null, language_name_en: languageNames?.name_en ?? null } })
+  return NextResponse.json({ data: { ...purchase, tracking_id: snapOrderId(purchase), language_name_ar: languageNames?.name_ar ?? null, language_name_en: languageNames?.name_en ?? null } })
 }

@@ -8,6 +8,7 @@ import { getBookLanguages } from '@/lib/content'
 import type { BookLanguage } from '@/types'
 import { isValidEmail } from '@/lib/auth'
 import { trackViewItem, trackSelectLanguage, trackBeginCheckout, trackAddPaymentInfo } from '@/lib/gtag'
+import { hasSnapConsent } from '@/lib/snap-consent'
 
 const P='#6747B2',PL='#EDE8FF',T1='#1A1228',T2='#4A4060',T3='#9890AA',BR='#EDE8F5'
 const PM=[
@@ -67,6 +68,7 @@ export default function CheckoutPage() {
 
     const item = { item_id: settings.product_id, item_name: settings.product_name, price: settings.product_price, book_language: bookLanguage }
     trackBeginCheckout(item, settings.product_currency)
+    if (hasSnapConsent() && window.snaptr?.handleRequest) window.snaptr('track', 'START_CHECKOUT', { currency: settings.product_currency, price: settings.product_price })
 
     try {
       const checkoutRes = await fetch('/api/checkout', {
