@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { tajawal } from '@/lib/font'
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
 import MetaPixel from '@/components/analytics/MetaPixel'
+import SnapPixel from '@/components/analytics/SnapPixel'
 import './globals.css'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rwnk.co'
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <GoogleAnalytics />
         <MetaPixel />
+        <SnapPixel />
         {children}
       </body>
     </html>
