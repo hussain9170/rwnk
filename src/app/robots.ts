@@ -4,6 +4,6 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       { userAgent: '*', allow: '/', disallow: ['/admin', '/api', '/auth', '/library', '/account'] },
     ],
-    sitemap: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://rwnk.co'}/sitemap.xml`,
+    sitemap: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.rwnak.net'}/sitemap.xml`,
   }
 }

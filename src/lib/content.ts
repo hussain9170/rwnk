@@ -9,6 +9,7 @@ export function pageMetadata(page: PageContent): Metadata {
   const description = page.meta_description ?? undefined
   return {
     title: page.title,
+    alternates: { canonical: `/${page.slug}` },
     description,
     openGraph: { title: `${page.title} | رَوْنَق`, description, type: 'website' },
     twitter: { card: 'summary_large_image', title: `${page.title} | رَوْنَق`, description },

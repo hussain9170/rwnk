@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: 'إنشاء حساب',
   description: 'أنشئي حساباً في رَوْنَق لإدارة مشترياتك وتحميل كتابك في أي وقت.',
   openGraph: { title: 'إنشاء حساب | رَوْنَق', description: 'أنشئي حساباً في رَوْنَق لإدارة مشترياتك.', type: 'website' },

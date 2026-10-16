@@ -31,6 +31,7 @@ export const dynamic = 'force-dynamic'
 const P='#6747B2',PL='#EDE8FF',PT='#26215C',T1='#1A1228',T2='#4A4060',T3='#9890AA',BR='#EDE8F5'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/' },
   title: 'رَوْنَق — دليل التنظيف الاحترافي',
   description: 'دليل تدريبي احترافي يحوّل عاملتك المنزلية إلى خبيرة تنظيف بمعايير الفنادق الخمس نجوم. تحميل فوري بعد الدفع.',
   openGraph: {
@@ -62,6 +63,9 @@ export default async function HomePage() {
     '@type': 'Product',
     name: settings.product_name,
     description: settings.product_description,
+    image: [settings.product_image_url || settings.hero_image_url || 'https://www.rwnak.net/rwnak-guide-preview.png'],
+    brand: { '@type': 'Brand', name: 'رَوْنَق' },
+    sku: settings.product_id,
     offers: {
       '@type': 'Offer',
       price: settings.product_price,
