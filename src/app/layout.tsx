@@ -6,7 +6,7 @@ import SnapPixel from '@/components/analytics/SnapPixel'
 import SnapConsent from '@/components/analytics/SnapConsent'
 import './globals.css'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rwnk.co'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.rwnak.net'
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

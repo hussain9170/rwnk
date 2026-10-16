@@ -14,6 +14,7 @@ const P = '#6747B2', T1 = '#1A1228', T2 = '#4A4060', BR = '#EDE8F5'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/faq' },
   title: 'الأسئلة الشائعة',
   description: 'إجابات على أكثر الأسئلة شيوعاً حول كتاب رَوْنَق ودليل التنظيف الاحترافي.',
   openGraph: {

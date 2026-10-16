@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: 'إتمام الشراء',
   description: 'أكملي عملية الشراء واحصلي على كتاب رَوْنَق فوراً — دفع آمن ومشفّر.',
   openGraph: { title: 'إتمام الشراء | رَوْنَق', description: 'أكملي عملية الشراء واحصلي على كتاب رَوْنَق فوراً.', type: 'website' },
