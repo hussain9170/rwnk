@@ -82,7 +82,7 @@ export default function RegisterPage() {
                 <input id={`reg-${f.k}`} type={f.t} autoComplete={f.ac} required={f.k!=='phone'} placeholder={f.ph} dir={f.ltr?'ltr':'rtl'} value={form[f.k as keyof typeof form]} onChange={set(f.k)} onFocus={focus} onBlur={blur} style={inp}/>
               </div>
             ))}
-            <p style={{fontSize:11,color:T3,textAlign:'center',marginBottom:12}}>بالتسجيل توافقين على <Link href="#" style={{color:P,fontWeight:700,textDecoration:'none'}}>شروط الاستخدام</Link></p>
+            <p style={{fontSize:11,color:T3,textAlign:'center',marginBottom:12}}>بالتسجيل توافقين على <Link href="/terms" style={{color:P,fontWeight:700,textDecoration:'none'}}>شروط الاستخدام</Link></p>
             <button type="submit" disabled={loading} style={{width:'100%',height:46,background:loading?'#8b6dd4':P,color:'#fff',border:'none',borderRadius:11,fontSize:14,fontWeight:900,cursor:loading?'wait':'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",boxShadow:'0 2px 12px rgba(103,71,178,.28)'}}>
               {loading?'جاري الإنشاء...':'إنشاء الحساب ←'}
             </button>
