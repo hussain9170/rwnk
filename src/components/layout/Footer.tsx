@@ -117,16 +117,21 @@ export default function Footer({ settings }: { settings?: StoreSettings }) {
                 {title}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {links.map(link => (
-                  <Link key={link.href} href={link.href} style={{
+                {links.map(link => {
+                  // Full document navigation lets the browser resolve section
+                  // anchors after streamed homepage content has finished loading.
+                  const FooterLink = link.href.includes('#') ? 'a' : Link
+                  return (
+                  <FooterLink key={link.href} href={link.href} style={{
                     fontSize: 13, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', transition: 'color .18s',
                   }}
                     onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}
                   >
                     {link.label}
-                  </Link>
-                ))}
+                  </FooterLink>
+                  )
+                })}
               </div>
             </div>
           ))}
