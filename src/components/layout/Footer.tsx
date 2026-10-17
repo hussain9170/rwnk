@@ -81,6 +81,11 @@ export default function Footer({ settings }: { settings?: StoreSettings }) {
               {S.store_tagline} — الدليل الأول للتنظيف المنزلي بمعايير الفنادق الراقية.
             </p>
 
+            {/* Support contact */}
+            <a href={`mailto:${S.email}`} dir="ltr" style={{ display: 'inline-block', color: '#fff', fontSize: 14, marginBottom: 20, textUnderlineOffset: 4 }}>
+              {S.email}
+            </a>
+
             {/* Social icons */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
               {SOCIAL.map(({ icon: Icon, href, label }) => (
