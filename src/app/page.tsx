@@ -33,16 +33,16 @@ const P='#6747B2',PL='#EDE8FF',PT='#26215C',T1='#1A1228',T2='#4A4060',T3='#6B617
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
   title: 'رَوْنَق — دليل التنظيف الاحترافي',
-  description: 'دليل تدريبي احترافي يحوّل عاملتك المنزلية إلى خبيرة تنظيف بمعايير الفنادق الخمس نجوم. تحميل فوري بعد الدفع.',
+  description: 'دليل عملي لتدريب العاملة وتنظيم التنظيف المنزلي بخطوات وقوائم مستوحاة من الضيافة الفندقية. تحميل فوري بعد الدفع.',
   openGraph: {
     title: 'رَوْنَق — دليل التنظيف الاحترافي',
-    description: 'دليل تدريبي يحوّل عاملتك إلى خبيرة تنظيف بمعايير 5 نجوم',
+    description: 'دليل عملي لتدريب العاملة وتنظيم التنظيف المنزلي',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'رَوْنَق — دليل التنظيف الاحترافي',
-    description: 'دليل تدريبي يحوّل عاملتك إلى خبيرة تنظيف بمعايير 5 نجوم',
+    description: 'دليل عملي لتدريب العاملة وتنظيم التنظيف المنزلي',
   },
 }
 
@@ -77,9 +77,10 @@ export default async function HomePage() {
 
   return (
     <div style={{fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl',background:'#fff',color:T1}}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd).replace(/</g, '\\u003c') }} />
       <Navbar />
 
+      <main>
       {/* ── HERO ── */}
       <section className="hero-grid" style={{maxWidth:1240,margin:'0 auto',padding:'clamp(96px,16vw,140px) clamp(20px,6vw,40px) clamp(56px,9vw,80px)',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'clamp(36px,6vw,72px)',alignItems:'center'}}>
         {/* RIGHT (desktop, RTL) / FIRST (mobile) — copy */}
@@ -337,6 +338,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      </main>
       <Footer settings={settings} showCta={false} />
     </div>
   )

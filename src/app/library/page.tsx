@@ -45,7 +45,7 @@ export default function LibraryPage() {
       const token=await generateDownloadTokenSafe(item.id)
       const url=`/api/download?token=${encodeURIComponent(token)}`
       if(downloadWindow && !downloadWindow.closed) downloadWindow.location.href=url
-      else window.location.href=url
+      else window.location.assign(url)
       // Only the server records successful downloads. Do not decrement here.
     }catch(err:any){
       downloadWindow?.close()

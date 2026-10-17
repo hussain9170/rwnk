@@ -324,7 +324,7 @@ section('Callback retry / duplicate callback idempotency')
   // A purchase already marked 'failed' must never be flipped to 'completed'
   // by a late-arriving success callback (e.g. reordered webhook delivery).
   const d = decideFinalize('failed', { status: 'completed', matchesPurchase: true, paymentMethod: 'VISA/MASTER', raw: {} })
-  check('late success callback on failed purchase is ignored', d.action === 'skip_already_final' && d.resultStatus === 'failed')
+  check('verified late success recovers a failed purchase', d.action === 'apply_update' && d.resultStatus === 'completed')
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -677,7 +677,7 @@ const bothConfigured = { file_path: LEGACY_PATH, file_path_ar: AR_PATH, file_pat
   // the caller logs it, rather than silently mismatching the language.
   const productArOnly = { file_path: LEGACY_PATH, file_path_ar: AR_PATH, file_path_en: null }
   const result = resolveProductFilePath('en', productArOnly)
-  check('en requested, no English file => falls back to Arabic rather than 404ing', result.filePath === AR_PATH)
+  check('en requested, no English file => never substitutes an Arabic file', result.filePath === null)
   check('en requested, no English file => degraded is true (must be logged, not silent)', result.degraded === true)
   check('language field still honestly reports "en" was requested (for the warning log)', result.language === 'en')
 }
@@ -691,7 +691,7 @@ const bothConfigured = { file_path: LEGACY_PATH, file_path_ar: AR_PATH, file_pat
   const ar = resolveProductFilePath('ar', legacyOnly)
   const en = resolveProductFilePath('en', legacyOnly)
   check('pre-migration state, ar request => legacy file_path (fixed to the real Arabic file during this audit)', ar.filePath === AR_PATH)
-  check('pre-migration state, en request => same legacy fallback (no English file to distinguish yet)', en.filePath === AR_PATH)
+  check('pre-migration state, en request => no wrong-language legacy fallback', en.filePath === null)
 }
 
 {
@@ -737,7 +737,7 @@ section('resolveBookLanguageFile (dynamic book_languages resolution)')
   check('ar falls back to legacy product column when book_languages has no row', ar.filePath === AR_PATH)
   check('ar fallback is flagged degraded (must be logged)', ar.degraded === true)
   check('en falls back to legacy product column when book_languages row has no file yet', en.filePath === EN_PATH)
-  check('en fallback is flagged degraded', en.degraded === true)
+  check('missing English file is flagged degraded', en.degraded === true)
 }
 
 {

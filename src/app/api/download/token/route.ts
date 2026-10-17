@@ -1,3 +1,5 @@
+import { publicRateLimit } from '@/lib/public-rate-limit'
+import { purchaseReader } from '@/lib/purchase-access'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerEnv } from '@/lib/env'
 import { mintDownloadToken } from '@/lib/payment-access'
@@ -7,6 +9,8 @@ export const dynamic = 'force-dynamic'
 // download_tokens has no INSERT policy for anon/authenticated by design —
 // token creation only ever happens here, server-side, after real checks.
 export async function POST(request: NextRequest) {
+  const limited = await publicRateLimit(request, 'download-token', 30)
+  if (limited) return limited
   let body: any
   try {
     body = await request.json()
@@ -19,22 +23,9 @@ export async function POST(request: NextRequest) {
   const { url: sbUrl, key: sbKey } = getSupabaseServerEnv()
   if (!sbUrl || !sbKey) return NextResponse.json({ error: 'الخدمة غير مهيأة، حاولي لاحقاً' }, { status: 500 })
 
-  // If the caller is logged in, verify they own this purchase (defense in depth).
-  // Guests (right after a fresh checkout, no account yet) are authorized by
-  // knowing the purchaseId itself — an unguessable UUID never exposed publicly.
-  let sessionUserId: string | null = null
-  try {
-    const { createServerClient } = await import('@supabase/ssr')
-    const { cookies } = await import('next/headers')
-    const cookieStore = await cookies()
-    const authed = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
-    )
-    const { data: { user } } = await authed.auth.getUser()
-    sessionUserId = user?.id ?? null
-  } catch { /* no session — treated as guest */ }
+  const reader = await purchaseReader(request, purchaseId, typeof body.access === 'string' ? body.access : null)
+  if (!reader.guest && !reader.userId) return NextResponse.json({ error: 'سجّلي الدخول أو افتحي رابط الاستلام من بريدك.' }, { status: 401 })
+  const sessionUserId = reader.userId
 
   const { createClient } = await import('@supabase/supabase-js')
   const sb = createClient(sbUrl, sbKey) as any
@@ -51,7 +42,7 @@ export async function POST(request: NextRequest) {
     console.warn(`[download/token] purchase ${purchaseId} is not completed (status=${purchase.status}) — refusing token`)
     return NextResponse.json({ error: 'لم تكتمل عملية الدفع لهذا الطلب' }, { status: 403 })
   }
-  if (sessionUserId && purchase.user_id && purchase.user_id !== sessionUserId) {
+  if (!reader.guest && purchase.user_id !== sessionUserId) {
     console.error(`[download/token] session user ${sessionUserId} does not own purchase ${purchaseId} (owner=${purchase.user_id})`)
     return NextResponse.json({ error: 'غير مصرح لك بتحميل هذا الطلب' }, { status: 403 })
   }

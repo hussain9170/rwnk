@@ -79,7 +79,7 @@ export function decideFinalize(
   now: () => string = () => new Date().toISOString()
 ): FinalizeDecision {
   if (currentPurchaseStatus === 'completed') return { action: 'skip_already_final', resultStatus: 'completed' }
-  if (currentPurchaseStatus === 'failed')    return { action: 'skip_already_final', resultStatus: 'failed' }
+
   if (currentPurchaseStatus === 'refunded')  return { action: 'skip_already_final', resultStatus: 'completed' }
 
   if (!gateway.matchesPurchase) return { action: 'reject_mismatch', resultStatus: 'pending' }
