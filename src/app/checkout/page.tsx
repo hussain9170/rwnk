@@ -151,7 +151,7 @@ export default function CheckoutPage() {
             {PM.map(m=>(
               <button key={m.id} type="button" role="radio" aria-checked={pm===m.id} onClick={()=>setPm(m.id)}
                 style={{minHeight:44,border:`1.5px solid ${pm===m.id?P:BR}`,background:pm===m.id?PL:'#fff',borderRadius:10,padding:'10px 8px',textAlign:'center',cursor:'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif"}}>
-                <div style={{display:'flex',justifyContent:'center',marginBottom:5}}><m.Icon height={20} /></div>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:32,marginBottom:6,direction:'ltr'}}><m.Icon height={28} /></div>
                 <div style={{fontSize:12,fontWeight:700,color:T2}}>{m.label}</div>
               </button>
             ))}

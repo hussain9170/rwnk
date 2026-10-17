@@ -8,7 +8,7 @@ import Image from 'next/image'
 
 export function CardBrandsIcon({ height = 22 }: { height?: number }) {
   return (
-    <svg width={height * 2.15} height={height} viewBox="0 0 86 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg direction="ltr" style={{ direction: 'ltr', display: 'block', flexShrink: 0 }} width={height * 2.15} height={height} viewBox="0 0 86 40" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Visa */}
       <rect x="0" y="4" width="40" height="32" rx="6" fill="#fff" stroke="#EDE8F5" />
       <text x="20" y="25" textAnchor="middle" fontFamily="Arial, sans-serif" fontStyle="italic" fontWeight="900" fontSize="13" fill="#1A1F71">VISA</text>
@@ -58,12 +58,12 @@ export function KnetIcon({ height = 22 }: { height?: number }) {
 // match Apple's actual Apple Pay mark.
 export function ApplePayIcon({ height = 22 }: { height?: number }) {
   return (
-    <svg width={height * 2.15} height={height} viewBox="0 0 86 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg role="img" aria-label="Apple Pay" direction="ltr" style={{ direction: 'ltr', display: 'block', flexShrink: 0 }} width={height * 2.15} height={height} viewBox="0 0 86 40" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="4" width="86" height="32" rx="6" fill="#000" />
       <g transform="translate(15,7) scale(0.72)" fill="#fff">
         <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47c-1.34.03-1.77-.79-3.29-.79c-1.53 0-2 .77-3.27.82c-1.31.05-2.3-1.32-3.14-2.53C4.25 17.11 2.94 12.65 4.7 9.62c.87-1.51 2.43-2.44 4.13-2.46c1.29-.02 2.5.87 3.29.87c.78 0 2.26-1.08 3.81-.92c.65.03 2.47.26 3.64 1.98c-.09.06-2.17 1.28-2.15 3.81c.03 3.02 2.65 4.03 2.68 4.04c-.03.07-.42 1.44-1.38 2.85M13 3.5c.73-.83 1.94-1.46 2.94-1.5c.13 1.17-.34 2.35-1.04 3.19c-.69.85-1.83 1.51-2.95 1.42c-.15-1.15.41-2.35 1.05-3.11" />
       </g>
-      <text x="34" y="25.5" fontFamily="-apple-system, 'SF Pro Text', Arial, sans-serif" fontWeight="600" fontSize="14" fill="#fff">Pay</text>
+      <text x="34" y="25.5" direction="ltr" textAnchor="start" fontFamily="-apple-system, 'SF Pro Text', Arial, sans-serif" fontWeight="600" fontSize="14" fill="#fff">Pay</text>
     </svg>
   )
 }
