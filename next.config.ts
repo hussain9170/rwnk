@@ -16,6 +16,20 @@ try {
 }
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return [
+      { source: '/:path*', headers: [
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'X-Frame-Options', value: 'DENY' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        { key: 'Content-Security-Policy', value: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://*.myfatoorah.com https://*.tap.company; upgrade-insecure-requests" },
+      ] },
+      { source: '/api/:path*', headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'Referrer-Policy', value: 'no-referrer' }] },
+      { source: '/success', headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'Referrer-Policy', value: 'no-referrer' }] },
+    ]
+  },
   // A lockfile in a parent folder (outside this repo) made Next guess the
   // wrong workspace root. Pin it explicitly to this project.
   // A lockfile in a parent folder (outside this repo) made Next guess the
@@ -28,7 +42,6 @@ const nextConfig: NextConfig = {
       ...(supabaseHostname
         ? [{ protocol: 'https' as const, hostname: supabaseHostname, pathname: '/storage/v1/object/public/**' }]
         : []),
-      { protocol: 'https' as const, hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },
     ],
   },
 };

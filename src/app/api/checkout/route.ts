@@ -1,6 +1,8 @@
+import { createPurchaseAccess } from '@/lib/purchase-access'
+import { publicRateLimit } from '@/lib/public-rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerEnv } from '@/lib/env'
-import { insertWithSchemaFallback, getSingletonRow, isMissingTableError } from '@/lib/db-resilience'
+import { insertWithSchemaFallback, getSingletonRow } from '@/lib/db-resilience'
 import { SNAP_CONSENT_COOKIE, parseSnapConsent } from '@/lib/snap-consent'
 
 export const dynamic = 'force-dynamic'
@@ -10,7 +12,6 @@ const VALID_METHODS = new Set(['card', 'knet', 'apple'])
 // Pre-dynamic-languages fallback ONLY — used when book_languages doesn't
 // exist yet (migration not applied to this database). Once that table
 // exists, resolveCheckoutLanguage below never consults this set.
-const LEGACY_LANGUAGES = new Set(['ar', 'en'])
 
 // The client picks a language, but the PRICE already comes from
 // store_settings (never the client) — this only decides which language code
@@ -21,24 +22,22 @@ const LEGACY_LANGUAGES = new Set(['ar', 'en'])
 // check only if the table itself doesn't exist yet (pre-migration database),
 // so checkout never hard-fails just because this migration hasn't run.
 async function resolveCheckoutLanguage(sb: any, requested: string): Promise<{ ok: true; language: string } | { ok: false }> {
-  if (!requested) return { ok: true, language: 'ar' }
+  if (!requested) return { ok: false }
 
-  const { data: lang, error } = await sb.from('book_languages').select('language_code').eq('language_code', requested).eq('is_active', true).maybeSingle()
+  const { data: lang, error } = await sb.from('book_languages').select('language_code,file_path').eq('language_code', requested).eq('is_active', true).maybeSingle()
   if (error) {
-    if (isMissingTableError(error)) {
-      console.error('[checkout] book_languages table not found — the migration in supabase/schema.sql §18 has not been run. Falling back to legacy ar/en validation. RUN THE MIGRATION.')
-      return LEGACY_LANGUAGES.has(requested) ? { ok: true, language: requested } : { ok: true, language: 'ar' }
-    }
     console.error(`[checkout] book_languages lookup failed: ${error.message} — rejecting the requested language rather than guessing`)
     return { ok: false }
   }
-  if (!lang) return { ok: false }
+  if (!lang || !lang.file_path) return { ok: false }
   return { ok: true, language: lang.language_code }
 }
 
 // Creates a pending purchase with a server-verified price — the client
 // never gets to decide how much a purchase costs.
 export async function POST(request: NextRequest) {
+  const limited = await publicRateLimit(request, 'checkout', 12)
+  if (limited) return limited
   let body: any
   try {
     body = await request.json()
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
   const paymentMethod = VALID_METHODS.has(body?.paymentMethod) ? body.paymentMethod : 'card'
   const requestedLanguage = typeof body?.bookLanguage === 'string' ? body.bookLanguage.trim().toLowerCase().slice(0, 10) : ''
 
-  if (!email || !EMAIL_RE.test(email)) {
+  if (email.length > 254 || !email || !EMAIL_RE.test(email)) {
     return NextResponse.json({ error: 'صيغة البريد الإلكتروني غير صحيحة' }, { status: 400 })
   }
 
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
 
   const languageResolution = await resolveCheckoutLanguage(sb, requestedLanguage)
   if (!languageResolution.ok) {
-    console.error(`[checkout] rejected purchase for ${email} — requested language "${requestedLanguage}" does not exist or is not active`)
+    console.error(`[checkout] rejected purchase for [redacted] — requested language "${requestedLanguage}" does not exist or is not active`)
     return NextResponse.json({ error: 'اللغة المختارة غير متاحة حالياً' }, { status: 400 })
   }
   const bookLanguage = languageResolution.language
@@ -101,17 +100,21 @@ export async function POST(request: NextRequest) {
   // missing, so this drops whichever of them the live schema doesn't have
   // (independently — either, both, or neither) and always completes the
   // insert with whatever columns DO exist.
+  if (typeof body.expectedPrice === 'number' && body.expectedPrice !== Number(settings.product_price)) {
+    return NextResponse.json({ error: 'تغيّر السعر. حدّثي الصفحة لمراجعة الإجمالي قبل الدفع.' }, { status: 409 })
+  }
+
   const { data: purchase, error: insertErr, droppedFields } = await insertWithSchemaFallback<{ id: string; amount: number; currency: string }>(sb, 'purchases', purchasePayload)
   if (droppedFields.length > 0) {
     console.error(`[checkout] purchases columns not found — dropped from insert: ${droppedFields.join(', ')}. The migration in supabase/schema.sql has not been fully run against this database. RUN THE MIGRATION.`)
   }
 
   if (insertErr || !purchase) {
-    console.error(`[checkout] failed to create pending purchase for ${email}: ${insertErr?.message ?? 'insert returned no row'}`)
+    console.error(`[checkout] failed to create pending purchase for [redacted]: ${insertErr?.message ?? 'insert returned no row'}`)
     return NextResponse.json({ error: 'تعذّر إنشاء الطلب، حاولي مرة أخرى' }, { status: 500 })
   }
 
-  console.log(`[checkout] pending purchase created — id=${purchase.id} email=${email} amount=${purchase.amount} ${purchase.currency} method=${paymentMethod} language=${bookLanguage}`)
+  console.log(`[checkout] pending purchase created — id=${purchase.id} email=[redacted] amount=${purchase.amount} ${purchase.currency} method=${paymentMethod} language=${bookLanguage}`)
 
   // Failure to record optional advertising consent must never block payment.
   const consent = parseSnapConsent(request.cookies.get(SNAP_CONSENT_COOKIE)?.value)
@@ -126,5 +129,5 @@ export async function POST(request: NextRequest) {
     } catch { console.warn('[snap/consent] unavailable; checkout unaffected') }
   }
 
-  return NextResponse.json({ purchaseId: purchase.id, amount: purchase.amount, currency: purchase.currency })
+  return NextResponse.json({ purchaseId: purchase.id, access: createPurchaseAccess(purchase.id), amount: purchase.amount, currency: purchase.currency })
 }

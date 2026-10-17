@@ -1,3 +1,6 @@
+import { reservePaymentAttempt, savePaymentAttempt } from '@/lib/payment-attempt'
+import { verifyPurchaseAccess } from '@/lib/purchase-access'
+import { publicRateLimit } from '@/lib/public-rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerEnv } from '@/lib/env'
 
@@ -67,12 +70,12 @@ async function initMyFatoorah(payload: {
     CustomerReference:  payload.purchaseId,
     UserDefinedField:   payload.purchaseId,
   }
-  console.log(`[myfatoorah/SendPayment] request — baseUrl=${baseUrl} purchase=${payload.purchaseId}`, JSON.stringify(requestBody))
 
   const sendRes = await fetch(`${baseUrl}/v2/SendPayment`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify(requestBody),
+    signal: AbortSignal.timeout(15000),
   })
 
   const rawBody = await sendRes.text()
@@ -84,11 +87,10 @@ async function initMyFatoorah(payload: {
     // always means the wrong base URL, an unreachable host, or an
     // authorization failure returning a non-API error page — none of which
     // surface any usable detail from send.Message, so log the raw response.
-    console.error(`[myfatoorah/SendPayment] non-JSON response (HTTP ${sendRes.status}) — likely wrong MYFATOORAH_BASE_URL or an auth/proxy failure. Raw body: ${rawBody.slice(0, 500)}`)
+    console.error(`[myfatoorah/SendPayment] non-JSON response (HTTP ${sendRes.status}) — likely wrong MYFATOORAH_BASE_URL or an auth/proxy failure. Provider response redacted`)
     throw new Error(`MyFatoorah returned a non-JSON response (HTTP ${sendRes.status})`)
   }
 
-  console.log(`[myfatoorah/SendPayment] response — HTTP ${sendRes.status} IsSuccess=${send.IsSuccess}`, JSON.stringify(send))
 
   if (!sendRes.ok) {
     console.error(`[myfatoorah/SendPayment] HTTP ${sendRes.status} — ${send.Message ?? 'no message'}`)
@@ -127,6 +129,8 @@ async function initTap(payload: {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = await publicRateLimit(request, 'payment-initiate', 20)
+  if (limited) return limited
   let body: any
   try {
     body = await request.json()
@@ -152,7 +156,7 @@ export async function POST(request: NextRequest) {
   // Amount and email are never taken from the client — always re-read from
   // the purchase row that /api/checkout created server-side.
   const { data: purchase, error: findErr } = await sb.from('purchases')
-    .select('id,email,amount,status').eq('id', purchaseId).single()
+    .select('id,email,amount,status,payment_ref').eq('id', purchaseId).single()
 
   if (findErr || !purchase) {
     console.error(`[payment/initiate] purchase ${purchaseId} not found: ${findErr?.message ?? 'no row'}`)
@@ -163,9 +167,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Purchase is not pending' }, { status: 409 })
   }
 
+  if (!verifyPurchaseAccess(purchaseId, body.access)) return NextResponse.json({ error: 'جلسة الدفع غير صالحة، ابدئي طلباً جديداً.' }, { status: 403 })
+  const attempt = await reservePaymentAttempt(sb, purchaseId)
+  if (attempt.state === 'error') return NextResponse.json({ error: 'تعذّر تجهيز جلسة الدفع، حاولي لاحقاً.' }, { status: 503 })
+  if (attempt.state === 'ready') return NextResponse.json({ paymentUrl: attempt.url, invoiceId: attempt.invoiceId })
+  if (attempt.state !== 'claimed') return NextResponse.json({ error: 'جاري تجهيز الدفع لهذا الطلب. إذا استمر الانتظار تواصلي مع info@rwnak.net قبل تكرار الدفع.' }, { status: 409 })
+
   const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const gateway    = (process.env.PAYMENT_GATEWAY ?? 'myfatoorah') as 'myfatoorah' | 'tap'
-  const callbackUrl = `${appUrl}/api/payment/callback?purchaseId=${purchaseId}&gateway=${gateway}`
+  const callbackUrl = `${appUrl}/api/payment/callback?purchaseId=${encodeURIComponent(purchaseId)}&gateway=${gateway}&access=${encodeURIComponent(body.access)}`
   // MyFatoorah appends `paymentId` to BOTH CallBackUrl (success) and ErrorUrl
   // (failed/declined/cancelled) — per official docs, it decides which of the
   // two to redirect to based on its own read of the outcome. That
@@ -191,7 +201,6 @@ export async function POST(request: NextRequest) {
   // dashboard-configured webhook.
   const webhookUrl = `${appUrl}/api/payment/callback?gateway=${gateway}`
 
-  console.log(`[payment/initiate] starting ${gateway} payment — purchase=${purchaseId} email=${purchase.email} amount=${purchase.amount}`)
 
   try {
     const result = gateway === 'tap'
@@ -202,16 +211,12 @@ export async function POST(request: NextRequest) {
     // here, server-side, BEFORE the customer ever reaches the gateway, so
     // /api/payment/callback never has to trust a gateway-redirect query
     // param to know which invoice/charge belongs to this purchase.
-    const { error: refErr } = await sb.from('purchases').update({ payment_ref: result.invoiceId }).eq('id', purchaseId)
-    if (refErr) {
-      console.error(`[payment/initiate] failed to store payment_ref for purchase ${purchaseId}: ${refErr.message}`)
-    } else {
-      console.log(`[payment/initiate] purchase ${purchaseId} → payment_ref=${result.invoiceId}, redirecting customer to gateway`)
-    }
+    const saved = await savePaymentAttempt(sb, purchaseId, attempt.claim, result.invoiceId, result.paymentUrl)
+    if (!saved) return NextResponse.json({ error: 'تعذّر حفظ جلسة الدفع. تواصلي مع الدعم قبل تكرار المحاولة.' }, { status: 503 })
 
     return NextResponse.json({ paymentUrl: result.paymentUrl, invoiceId: result.invoiceId })
   } catch (err: any) {
     console.error(`[payment/initiate] gateway error for purchase ${purchaseId}: ${err.message}`)
-    return NextResponse.json({ error: err.message ?? 'Gateway error' }, { status: 500 })
+    return NextResponse.json({ error: 'تعذّر الاتصال ببوابة الدفع. حاولي لاحقاً أو تواصلي مع الدعم.' }, { status: 500 })
   }
 }

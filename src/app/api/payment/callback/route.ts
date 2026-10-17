@@ -1,3 +1,6 @@
+import { flushPurchaseEmails } from '@/lib/purchase-mail-queue'
+import { publicRateLimit } from '@/lib/public-rate-limit'
+import { purchaseSuccessUrl, verifyPurchaseAccess } from '@/lib/purchase-access'
 import { after, NextRequest, NextResponse } from 'next/server'
 import { flushSnapPurchases } from '@/lib/snap-capi'
 import { getSupabaseServerEnv } from '@/lib/env'
@@ -39,6 +42,7 @@ async function checkMyFatoorah(key: string, keyType: 'InvoiceId' | 'PaymentId', 
   const res = await fetch(`${baseUrl}/v2/GetPaymentStatus`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    signal: AbortSignal.timeout(10000),
     body: JSON.stringify({ Key: key, KeyType: keyType }),
   })
 
@@ -47,10 +51,9 @@ async function checkMyFatoorah(key: string, keyType: 'InvoiceId' | 'PaymentId', 
   try {
     data = JSON.parse(rawBody)
   } catch {
-    console.error(`[payment/verify] MyFatoorah GetPaymentStatus returned non-JSON (HTTP ${res.status}) for purchase ${purchaseId} — likely wrong MYFATOORAH_BASE_URL or an auth/proxy failure. Raw body: ${rawBody.slice(0, 500)}`)
+    console.error(`[payment/verify] MyFatoorah GetPaymentStatus returned non-JSON (HTTP ${res.status}) for purchase ${purchaseId} — likely wrong MYFATOORAH_BASE_URL or an auth/proxy failure. Provider response redacted`)
     throw new Error(`MyFatoorah status check returned a non-JSON response (HTTP ${res.status})`)
   }
-  console.log(`[payment/verify] MyFatoorah GetPaymentStatus response — HTTP ${res.status} IsSuccess=${data.IsSuccess}`, JSON.stringify(data))
 
   if (!res.ok) {
     console.error(`[payment/verify] MyFatoorah GetPaymentStatus HTTP ${res.status} for purchase ${purchaseId} — ${data.Message ?? 'no message'}`)
@@ -101,7 +104,6 @@ async function checkTap(chargeId: string, purchaseId: string): Promise<GatewayRe
     headers: { Authorization: `Bearer ${process.env.TAP_SECRET_KEY!}` },
   })
   const charge = await res.json()
-  console.log('[payment/verify] Tap charge response', JSON.stringify(charge))
 
   const ref = charge.metadata?.purchaseId ?? charge.reference?.merchant
   const matchesPurchase = ref === purchaseId
@@ -174,25 +176,18 @@ async function notifyPurchaseCompleted(sb: any, purchase: CompletedPurchaseInfo,
     const languageLabel = languageRow?.name_ar
       ?? (language === 'en' ? 'English' : language === 'ar' ? 'العربية' : language)
 
-    const result = await sendPurchaseConfirmationEmail({
-      to: purchase.email,
-      language,
-      storeName: settings?.store_name ?? 'رَوْنَق',
-      productName: product?.name ?? 'الكتاب الرقمي',
-      invoiceNumber: purchase.invoice_number ?? purchase.id,
-      amount: purchase.amount,
-      currency: purchase.currency,
-      purchaseDate: purchase.created_at,
-      successUrl: `${appUrl}/success?purchaseId=${purchase.id}`,
-      supportEmail: settings?.email ?? 'info@rwnak.net',
-      websiteUrl: appUrl,
-      logoUrl: settings?.logo_url ?? null,
-      bookCoverUrl: settings?.product_image_url ?? null,
-      customerName: purchase.customer_name ?? null,
+    const queue = await flushPurchaseEmails(sb, purchase.id)
+    // Preserve delivery until the explicitly approved queue migration is applied.
+    // No DDL is executed by the application.
+    if (!queue.available) await sendPurchaseConfirmationEmail({
+      to: purchase.email, language: purchase.book_language ?? 'ar',
+      storeName: settings?.store_name ?? 'رَوْنَق', productName: product?.name ?? 'دليل رَوْنَق',
+      invoiceNumber: purchase.invoice_number ?? purchase.id, amount: purchase.amount, currency: purchase.currency,
+      purchaseDate: purchase.created_at, successUrl: purchaseSuccessUrl(appUrl, purchase.id),
+      supportEmail: settings?.email ?? 'info@rwnak.net', websiteUrl: appUrl,
+      logoUrl: settings?.logo_url ?? null, bookCoverUrl: settings?.product_image_url ?? null,
+      customerName: purchase.customer_name ?? null, idempotencyKey: `purchase-confirmation-v1/${purchase.id}`,
     })
-    if (!result.ok) {
-      console.warn(`[payment/callback] purchase ${purchase.id} — confirmation email not sent (${result.reason}); customer can still reach /success directly`)
-    }
 
     // Admin's own "new order" notification, sent to the store's own contact
     // address (store_settings.email — the only concept of an "admin/owner
@@ -269,16 +264,18 @@ async function verifyAndFinalize(
   // needed once we already know the outcome. Account linking is retried
   // here regardless (see below) in case a PREVIOUS completion left the
   // purchase completed but account provisioning itself failed transiently.
-  if (purchase.status !== 'pending') {
+  if (purchase.status === 'completed' || purchase.status === 'refunded') {
     const decision = decideFinalize(purchase.status, { status: 'pending', matchesPurchase: false, paymentMethod: null, raw: null })
     console.log(`[payment/callback] purchase ${purchaseId} already finalized as ${purchase.status} — idempotent no-op, not re-verifying with the gateway`)
     if (decision.resultStatus === 'completed') {
-      if (purchase.status === 'completed') after(() => flushSnapPurchases(sb, purchaseId))
+      if (purchase.status === 'completed') after(async () => { await Promise.allSettled([flushSnapPurchases(sb, purchaseId), flushPurchaseEmails(sb, purchaseId)]) })
       const linked = await ensureUserLinked(sb, purchase)
       return { status: 'completed', userId: linked?.userId ?? purchase.user_id ?? null, email: linked?.email ?? purchase.email ?? null }
     }
     return { status: decision.resultStatus, userId: null, email: null }
   }
+
+  if (purchase.payment_ref?.startsWith('creating:')) return { status: 'pending', userId: null, email: null }
 
   let key = purchase.payment_ref as string | null
   let keyType: 'InvoiceId' | 'PaymentId' = 'InvoiceId'
@@ -312,7 +309,7 @@ async function verifyAndFinalize(
   // finds 0 rows matched and no-ops.
   const { data: updated, error: updateErr } = await sb.from('purchases')
     .update(decision.update)
-    .eq('id', purchaseId).eq('status', 'pending')
+    .eq('id', purchaseId).eq('status', purchase.status)
     .select('id,user_id').maybeSingle()
 
   if (updateErr) {
@@ -344,7 +341,7 @@ async function verifyAndFinalize(
     console.log(`[payment/callback] purchase ${purchaseId} was already transitioned by a concurrent request — re-reading its final state`)
     const { data: settled } = await sb.from('purchases').select('status,user_id,email').eq('id', purchaseId).single()
     if (settled?.status === 'completed') {
-      after(() => flushSnapPurchases(sb, purchaseId))
+      after(async () => { await Promise.allSettled([flushSnapPurchases(sb, purchaseId), flushPurchaseEmails(sb, purchaseId)]) })
       const linked = await ensureUserLinked(sb, { id: purchaseId, user_id: settled.user_id, email: settled.email })
       return { status: 'completed', userId: linked?.userId ?? settled.user_id ?? null, email: linked?.email ?? settled.email ?? null }
     }
@@ -354,12 +351,12 @@ async function verifyAndFinalize(
   console.log(`[payment/callback] purchase ${purchaseId} → status=${decision.resultStatus}${decision.resultStatus === 'completed' ? ` paid_at=${decision.update?.paid_at} payment_method=${decision.update?.payment_method ?? '(unchanged)'}` : ''}`)
 
   if (decision.resultStatus === 'completed') {
-    after(() => flushSnapPurchases(sb, purchaseId))
+    after(async () => { await Promise.allSettled([flushSnapPurchases(sb, purchaseId), flushPurchaseEmails(sb, purchaseId)]) })
     // This call's own CAS update just flipped pending -> completed — the
     // ONE moment notifyPurchaseCompleted (download token + confirmation
     // email) is allowed to fire for this purchase, ever.
     const linked = await ensureUserLinked(sb, { id: purchaseId, user_id: updated.user_id, email: purchase.email, guest_email: purchase.guest_email })
-    await notifyPurchaseCompleted(sb, {
+    after(() => notifyPurchaseCompleted(sb, {
       id: purchaseId,
       email: linked?.email ?? purchase.email,
       invoice_number: purchase.invoice_number,
@@ -369,7 +366,7 @@ async function verifyAndFinalize(
       product_id: purchase.product_id,
       book_language: purchase.book_language ?? null,
       customer_name: purchase.customer_name ?? null,
-    }, linked?.userId ?? null, appUrl)
+    }, linked?.userId ?? null, appUrl))
     return { status: 'completed', userId: linked?.userId ?? null, email: linked?.email ?? purchase.email ?? null }
   }
 
@@ -378,6 +375,8 @@ async function verifyAndFinalize(
 
 // ── GET — redirect-based callback (user returns from gateway) ─
 export async function GET(request: NextRequest) {
+  const limited = await publicRateLimit(request, 'payment-callback', 90)
+  if (limited) return limited
   const params     = request.nextUrl.searchParams
   const purchaseId = params.get('purchaseId')
   const gateway    = params.get('gateway') ?? 'myfatoorah'
@@ -387,7 +386,6 @@ export async function GET(request: NextRequest) {
   const urlKey     = params.get('paymentId') ?? params.get('tap_id') ?? params.get('id')
   const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
-  console.log(`[payment/callback GET] received — purchaseId=${purchaseId ?? 'MISSING'} gateway=${gateway} query="${params.toString()}"`)
 
   if (!purchaseId) {
     console.error('[payment/callback GET] no purchaseId on the redirect URL — cannot identify which purchase to verify')
@@ -404,8 +402,14 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await verifyAndFinalize(purchaseId, gateway, sb, urlKey, appUrl)
+    // Gateway confirmation may update an old order, but knowing its UUID
+    // must never mint a new guest capability. Older checkout callbacks
+    // without proof recover access through verified email/account login.
+    if (!verifyPurchaseAccess(purchaseId, params.get('access'))) {
+      return NextResponse.redirect(`${appUrl}/login?next=%2Flibrary`)
+    }
     const destination = resultStatusToDestination(result.status)
-    const successPath = `/success?purchaseId=${purchaseId}`
+    const successUrl = purchaseSuccessUrl(appUrl, purchaseId)
 
     if (destination === 'success') {
       // Auto-login via generateAutoLoginLink is INTENTIONALLY DISABLED as of
@@ -447,7 +451,7 @@ export async function GET(request: NextRequest) {
       // which this fix attempts, since neither is required to reliably get
       // a paying customer to their book.
       console.log(`[payment/callback GET][redirect] purchase ${purchaseId} PAID — sending to /success (auto-login via magic link is disabled; see comment above)`)
-      return NextResponse.redirect(`${appUrl}${successPath}`)
+      return NextResponse.redirect(successUrl)
     }
 
     if (destination === 'pending') {
@@ -461,7 +465,7 @@ export async function GET(request: NextRequest) {
       // background and upgrades to the success view automatically once
       // settlement completes, without the customer having to do anything.
       console.log(`[payment/callback GET][redirect] purchase ${purchaseId} still pending — sending to /success (pending state), NOT /checkout`)
-      return NextResponse.redirect(`${appUrl}/success?purchaseId=${purchaseId}`)
+      return NextResponse.redirect(purchaseSuccessUrl(appUrl, purchaseId))
     }
 
     console.log(`[payment/callback GET][redirect] purchase ${purchaseId} failed/declined/cancelled — sending customer to /checkout with an Arabic error`)
@@ -474,6 +478,8 @@ export async function GET(request: NextRequest) {
 
 // ── POST — webhook from gateway (server-to-server) ────────────
 export async function POST(request: NextRequest) {
+  const limited = await publicRateLimit(request, 'payment-callback', 90)
+  if (limited) return limited
   let body: any
   try {
     body = await request.json()
@@ -499,7 +505,6 @@ export async function POST(request: NextRequest) {
     purchaseId = extractMyFatoorahWebhookPurchaseId(body)
   }
 
-  console.log(`[payment/callback POST] webhook received — gateway=${gateway} purchaseId=${purchaseId ?? 'MISSING'} body=${JSON.stringify(body).slice(0, 1000)}`)
 
   if (!purchaseId) {
     console.error('[payment/callback POST] webhook payload has no purchase reference — cannot process', JSON.stringify(body))

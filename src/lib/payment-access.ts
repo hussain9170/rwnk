@@ -44,11 +44,11 @@ export async function ensureUserLinked(
     return { userId: purchase.user_id, email, isNewUser: false }
   }
 
-  console.log(`[payment/access] purchase ${purchase.id} has no user_id yet — provisioning account for ${email}`)
+  console.log(`[payment/access] purchase ${purchase.id} has no user_id yet — provisioning account for [redacted]`)
 
   const { data: created, error: createErr } = await sb.auth.admin.createUser({
     email,
-    email_confirm: true, // paid customer — email is already proven deliverable via the checkout flow, no confirmation click needed to unblock their own purchase
+    email_confirm: false, // Payment does not prove mailbox ownership; recovery/verification proves it.
     user_metadata: { source: 'purchase', purchase_id: purchase.id },
     // No password is set here — this account exists purely so the purchase
     // has somewhere to link to. app_metadata (never client-writable, unlike
@@ -66,10 +66,10 @@ export async function ensureUserLinked(
     const msg = (createErr.message ?? '').toLowerCase()
     const alreadyExists = msg.includes('already registered') || msg.includes('already exists') || msg.includes('already been registered')
     if (!alreadyExists) {
-      console.error(`[payment/access] purchase ${purchase.id} — auth.admin.createUser failed for ${email}: ${createErr.message}`)
+      console.error(`[payment/access] purchase ${purchase.id} — auth.admin.createUser failed for [redacted]: ${createErr.message}`)
       return null
     }
-    console.log(`[payment/access] purchase ${purchase.id} — ${email} already has an account, looking it up to link this purchase (repeat customer)`)
+    console.log(`[payment/access] purchase ${purchase.id} — [redacted] already has an account, looking it up to link this purchase (repeat customer)`)
     for (let page = 1; page <= 20 && !userId; page++) {
       const { data, error } = await sb.auth.admin.listUsers({ page, perPage: 1000 })
       if (error || !data?.users?.length) {
@@ -81,13 +81,13 @@ export async function ensureUserLinked(
       if (data.users.length < 1000) break
     }
     if (!userId) {
-      console.error(`[payment/access] purchase ${purchase.id} — createUser said "already registered" but no matching account was found for ${email} via listUsers`)
+      console.error(`[payment/access] purchase ${purchase.id} — createUser said "already registered" but no matching account was found for [redacted] via listUsers`)
       return null
     }
   } else {
     userId = created.user.id
     isNewUser = true
-    console.log(`[payment/access] purchase ${purchase.id} — created new account ${userId} for ${email}`)
+    console.log(`[payment/access] purchase ${purchase.id} — created new account ${userId} for [redacted]`)
   }
 
   const { error: linkErr } = await sb.from('purchases')
@@ -127,10 +127,10 @@ export async function generateAutoLoginLink(sb: any, email: string, redirectPath
     options: { redirectTo },
   })
   if (error || !data?.properties?.action_link) {
-    console.error(`[payment/access] generateLink(magiclink) failed for ${email}: ${error?.message ?? 'no action_link returned'}`)
+    console.error(`[payment/access] generateLink(magiclink) failed for [redacted]: ${error?.message ?? 'no action_link returned'}`)
     return null
   }
-  console.log(`[payment/access] minted auto-login link for ${email} → redirect target ${redirectTo}`)
+  console.log(`[payment/access] minted auto-login link for [redacted] → redirect target ${redirectTo}`)
   return data.properties.action_link as string
 }
 

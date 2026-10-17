@@ -24,6 +24,7 @@ export type EmailLanguage = string
 type TemplateKey = 'ar' | 'en'
 
 export interface PurchaseEmailParams {
+  idempotencyKey?: string
   to: string
   language: EmailLanguage
   storeName: string
@@ -310,24 +311,25 @@ function buildEmailHtml(p: PurchaseEmailParams): string {
 // message) to diagnose from server logs alone. This is what "emails must
 // never silently fail" means in practice: not that sending can't fail, but
 // that a failure is always visible and never mistaken for success.
-async function sendResendEmail(logLabel: string, apiKey: string, from: string, to: string, subject: string, html: string): Promise<SendEmailResult> {
+async function sendResendEmail(logLabel: string, apiKey: string, from: string, to: string, subject: string, html: string, idempotencyKey?: string): Promise<SendEmailResult> {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}`, ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
         body: JSON.stringify({ from, to: [to], subject, html }),
+        signal: AbortSignal.timeout(10000),
       })
       const bodyText = await res.text()
       if (res.ok) {
-        console.log(`[email] ${logLabel} sent to ${to}${attempt > 1 ? ` (succeeded on retry ${attempt})` : ''}`)
+        console.log(`[email] ${logLabel} accepted by provider${attempt > 1 ? ` (succeeded on retry ${attempt})` : ''}`)
         return { ok: true }
       }
-      const retryable = res.status >= 500
-      console.error(`[email] ${logLabel} to ${to} failed — HTTP ${res.status}: ${bodyText.slice(0, 500)}${retryable && attempt === 1 ? ' — retrying once' : ''}`)
+      const retryable = res.status >= 500 || res.status === 429
+      console.error(`[email] ${logLabel} failed — HTTP ${res.status}: [provider response redacted]${retryable && attempt === 1 ? ' — retrying once' : ''}`)
       if (!retryable || attempt === 2) return { ok: false, reason: 'send_failed' }
     } catch (err: any) {
-      console.error(`[email] ${logLabel} to ${to} threw: ${err?.message ?? err}${attempt === 1 ? ' — retrying once' : ''}`)
+      console.error(`[email] ${logLabel} threw: ${err?.message ?? err}${attempt === 1 ? ' — retrying once' : ''}`)
       if (attempt === 2) return { ok: false, reason: 'send_failed' }
     }
     await new Promise(resolve => setTimeout(resolve, 800))
@@ -415,7 +417,7 @@ export async function sendPurchaseConfirmationEmail(p: PurchaseEmailParams): Pro
   }
 
   const subject = getCopy(p.language).subject(p.invoiceNumber)
-  return sendResendEmail(`purchase confirmation (language=${p.language}, invoice=${p.invoiceNumber})`, apiKey, from, p.to, subject, buildEmailHtml(p))
+  return sendResendEmail(`purchase confirmation (language=${p.language}, invoice=${p.invoiceNumber})`, apiKey, from, p.to, subject, buildEmailHtml(p), p.idempotencyKey)
 }
 
 export interface TestEmailResult extends SendEmailResult {

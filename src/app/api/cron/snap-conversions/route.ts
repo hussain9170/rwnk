@@ -1,3 +1,4 @@
+import { flushPurchaseEmails } from '@/lib/purchase-mail-queue'
 import { NextRequest, NextResponse } from 'next/server'
 import { timingSafeEqual } from 'node:crypto'
 import { getSupabaseServerEnv } from '@/lib/env'
@@ -11,5 +12,7 @@ export async function GET(request: NextRequest) {
   const { url, key } = getSupabaseServerEnv()
   if (!url || !key) return new NextResponse(null, { status: 503 })
   const { createClient } = await import('@supabase/supabase-js')
-  return NextResponse.json(await flushSnapPurchases(createClient(url, key)))
+  const sb = createClient(url, key)
+  const [snap, email] = await Promise.all([flushSnapPurchases(sb), flushPurchaseEmails(sb)])
+  return NextResponse.json({ snap, email })
 }

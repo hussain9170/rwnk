@@ -9,7 +9,7 @@ import { C } from '@/lib/theme'
 import { getStoreSettings, DEFAULT_SETTINGS, type StoreSettings } from '@/lib/store-settings'
 import {
   IconCircleCheck, IconDownload, IconArrowRight,
-  IconFileText, IconLock, IconUser, IconAlertTriangle,
+  IconFileText, IconLock, IconAlertTriangle,
 } from '@tabler/icons-react'
 import { trackPurchase, trackDownloadBook, hasTrackedPurchase, markPurchaseTracked } from '@/lib/gtag'
 
@@ -49,17 +49,11 @@ export default function SuccessPage() {
   const [info, setInfo]        = useState<PurchaseInfo | null>(null)
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
   const [settingsLoaded, setSettingsLoaded] = useState(false)
-  const [pwd, setPwd]          = useState('')
-  const [pwd2, setPwd2]        = useState('')
   const [pwLoading, setPwLoad] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
   const [pwError, setPwError]  = useState('')
   const [dlLoad, setDlLoad]    = useState(false)
   const [dlError, setDlError]  = useState('')
-  const [alreadyUser, setAldy] = useState(false)
-
-  const focus = (e: React.FocusEvent<HTMLInputElement>) => { e.target.style.borderColor=C.primary; e.target.style.boxShadow='0 0 0 3px rgba(103,71,178,.1)' }
-  const blur  = (e: React.FocusEvent<HTMLInputElement>) => { e.target.style.borderColor=C.border;  e.target.style.boxShadow='none' }
-  const inpS: React.CSSProperties = { width:'100%', height:44, background:'#FAFAFA', border:`1px solid ${C.border}`, borderRadius:11, padding:'0 14px', fontSize:13, color:C.text1, outline:'none', fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif", direction:'ltr', transition:'all .2s' }
 
   useEffect(() => {
     getStoreSettings().then(s => { setSettings(s); setSettingsLoaded(true) })
@@ -67,7 +61,7 @@ export default function SuccessPage() {
       const purchaseId = new URLSearchParams(window.location.search).get('purchaseId')
       if (!purchaseId) { setStep('not_found'); return }
       try {
-        const res = await fetch(`/api/purchase-status?purchaseId=${encodeURIComponent(purchaseId)}`)
+        const res = await fetch(`/api/purchase-status?purchaseId=${encodeURIComponent(purchaseId)}&access=${encodeURIComponent(new URLSearchParams(window.location.search).get('access') ?? '')}`)
         const json = await res.json()
         if (!res.ok || !json.data) { setStep('not_found'); return }
         setInfo(json.data)
@@ -94,7 +88,7 @@ export default function SuccessPage() {
     const interval = setInterval(async () => {
       attempts++
       try {
-        const res = await fetch(`/api/purchase-status?purchaseId=${encodeURIComponent(info.id)}`)
+        const res = await fetch(`/api/purchase-status?purchaseId=${encodeURIComponent(info.id)}&access=${encodeURIComponent(new URLSearchParams(window.location.search).get('access') ?? '')}`)
         const json = await res.json()
         if (cancelled) return
         if (res.ok && json.data?.status === 'completed') {
@@ -135,30 +129,36 @@ export default function SuccessPage() {
   async function handleDownload() {
     if (!info?.id) return
     trackDownloadBook(info.book_language ?? 'ar', info.invoice_number)
+    const downloadWindow = window.open('about:blank', '_blank')
+    if (downloadWindow) downloadWindow.opener = null
     setDlLoad(true); setDlError('')
     try {
       const res = await fetch('/api/download/token', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ purchaseId: info.id }),
+        body: JSON.stringify({ purchaseId: info.id, access: new URLSearchParams(window.location.search).get('access') }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error === 'LIMIT_REACHED' ? 'LIMIT_REACHED' : (json.error ?? 'ERROR'))
-      window.open(`/api/download?token=${json.token}`, '_blank')
-      setInfo(p => p ? { ...p, downloads_used: p.downloads_used + 1 } : p)
+      const downloadUrl = `/api/download?token=${encodeURIComponent(json.token)}`
+      if (downloadWindow && !downloadWindow.closed) downloadWindow.location.assign(downloadUrl)
+      else window.location.assign(downloadUrl)
+      // Quota is owned by the server; never decrement before a successful download.
+      const latest = await fetch(`/api/purchase-status?purchaseId=${encodeURIComponent(info.id)}&access=${encodeURIComponent(new URLSearchParams(window.location.search).get('access') ?? '')}`)
+      const status = await latest.json()
+      if (latest.ok && status.data) setInfo(status.data)
     } catch (err: any) {
+      downloadWindow?.close()
       setDlError(err.message === 'LIMIT_REACHED' ? 'استنفذتِ عدد التحميلات المتاحة. تواصلي معنا لطلب تحميل إضافي.' : 'حدث خطأ أثناء تحضير رابط التحميل، حاولي مرة أخرى.')
     } finally { setDlLoad(false) }
   }
 
   async function handleCreateAccount(e: React.FormEvent) {
     e.preventDefault()
-    if (!pwd || pwd.length < 8) { setPwError('كلمة المرور 8 أحرف على الأقل'); return }
-    if (pwd !== pwd2) { setPwError('كلمتا المرور غير متطابقتين'); return }
     setPwLoad(true); setPwError('')
     try {
       const { createAccountAfterPurchase } = await import('@/lib/auth')
-      const result = await createAccountAfterPurchase(info?.email ?? '', pwd, info?.id ?? '')
-      if (result.alreadyExists) setAldy(true)
+      await createAccountAfterPurchase(info?.email ?? '')
+      setEmailSent(true)
       setStep('done')
     } catch (err: any) {
       const { mapAuthError } = await import('@/lib/auth')
@@ -189,10 +189,10 @@ export default function SuccessPage() {
           <p style={{ fontSize:13, color:C.text3, lineHeight:1.7, marginBottom:24 }}>
             {step === 'pending'
               ? 'لم نستلم تأكيد الدفع لهذا الطلب بعد. إذا خُصم المبلغ من حسابك تواصلي معنا وسنساعدك فوراً.'
-              : 'الرابط الذي فتحته غير صحيح أو منتهي الصلاحية. تحققي من رابط الطلب أو أعيدي المحاولة.'}
+              : 'الرابط غير صالح أو قديم. سجّلي الدخول إلى مكتبتك، أو استخدمي نسيت كلمة المرور ببريد الشراء. للمساعدة: info@rwnak.net'}
           </p>
-          <Link href="/checkout" style={{ display:'inline-block', background:C.primary, color:'#fff', fontSize:13, fontWeight:900, padding:'12px 24px', borderRadius:11, textDecoration:'none' }}>
-            العودة لصفحة الدفع
+          <Link href={step === 'not_found' ? '/login' : '/checkout'} style={{ display:'inline-block', background:C.primary, color:'#fff', fontSize:13, fontWeight:900, padding:'12px 24px', borderRadius:11, textDecoration:'none' }}>
+            {step === 'not_found' ? 'دخول العملاء واستعادة الوصول' : 'العودة لصفحة الدفع'}
           </Link>
         </div>
       </main>
@@ -293,19 +293,9 @@ export default function SuccessPage() {
                 أنشئي كلمة مرور لتتمكني من إعادة التحميل في أي وقت من مكتبتك.
               </p>
               <form onSubmit={handleCreateAccount}>
-                <div style={{ marginBottom:10 }}>
-                  <label htmlFor="success-pwd" style={{ display:'block', fontSize:10, fontWeight:700, color:C.text2, textTransform:'uppercase', marginBottom:5 }}>كلمة المرور</label>
-                  <input id="success-pwd" type="password" placeholder="8 أحرف على الأقل" autoComplete="new-password" value={pwd} onChange={e=>setPwd(e.target.value)} onFocus={focus} onBlur={blur} style={inpS} />
-                </div>
-                <div style={{ marginBottom:12 }}>
-                  <label htmlFor="success-pwd2" style={{ display:'block', fontSize:10, fontWeight:700, color:C.text2, textTransform:'uppercase', marginBottom:5 }}>تأكيد كلمة المرور</label>
-                  <input id="success-pwd2" type="password" placeholder="••••••••" autoComplete="new-password" value={pwd2} onChange={e=>setPwd2(e.target.value)} onFocus={focus} onBlur={blur} style={inpS} />
-                </div>
-                {pwError && <p role="alert" style={{ fontSize:12, color:'#A32D2D', marginBottom:10, padding:'7px 12px', background:'#FEF2F2', borderRadius:8 }}>{pwError}</p>}
-                <button type="submit" disabled={pwLoading} aria-busy={pwLoading} style={{ width:'100%', height:44, background:pwLoading?'#8b6dd4':C.primary, color:'#fff', border:'none', borderRadius:11, fontSize:13, fontWeight:900, cursor:pwLoading?'wait':'pointer', fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif", display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                  <IconUser size={16} />
-                  {pwLoading ? 'جاري الإنشاء...' : 'إنشاء حسابي وحفظ الوصول'}
-                </button>
+                <p style={{fontSize:14,lineHeight:1.8,color:C.text2,marginBottom:16}}>لحماية حسابك، نرسل رابطاً إلى بريد الشراء. افتحيه لتعيين كلمة المرور وحفظ الوصول إلى مكتبتك.</p>
+                <button type="submit" disabled={pwLoading} style={{width:'100%',minHeight:48,background:C.primary,color:'#fff',border:0,borderRadius:12,fontFamily:'inherit',fontWeight:700}}>{pwLoading ? 'جاري الإرسال...' : 'أرسلي رابط تأكيد الإيميل'}</button>
+                {pwError && <p role="alert">{pwError}</p>}
               </form>
               <button onClick={() => setStep('done')} style={{ width:'100%', marginTop:8, background:'none', border:'none', fontSize:12, color:C.text3, cursor:'pointer', fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif" }}>
                 تجاهل — سأنشئ حساباً لاحقاً
@@ -319,10 +309,10 @@ export default function SuccessPage() {
               <IconCircleCheck size={20} color="#085041" />
               <div>
                 <div style={{ fontSize:13, fontWeight:900, color:'#04342C' }}>
-                  {alreadyUser ? 'لديك حساب بالفعل — تم إرسال رابط لتعيين كلمة المرور إلى بريدك' : 'تم إنشاء حسابك بنجاح'}
+                  {emailSent ? 'تم إرسال رابط لتعيين كلمة المرور إلى بريدك' : 'تحميلك متاح من هذا الرابط لمدة 30 يوماً'}
                 </div>
                 <div style={{ fontSize:11, color:'#085041', marginTop:2 }}>
-                  {alreadyUser ? 'افتحي الرابط من بريدك الإلكتروني لتسجيل الدخول' : 'يمكنك الآن الوصول للمكتبة في أي وقت'}
+                  {emailSent ? 'افتحي الرابط من بريدك الإلكتروني لتأكيد ملكيته وحفظ الوصول' : 'للوصول لاحقاً، سجّلي الدخول ببريد الشراء أو استخدمي نسيت كلمة المرور.'}
                 </div>
               </div>
             </div>

@@ -1,4 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { flushPurchaseEmails } from '@/lib/purchase-mail-queue'
+import { publicRateLimit } from '@/lib/public-rate-limit'
+import { purchaseReader } from '@/lib/purchase-access'
+import { after, NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerEnv } from '@/lib/env'
 import { snapOrderId } from '@/lib/snap-capi'
 
@@ -8,8 +11,13 @@ export const dynamic = 'force-dynamic'
 // data for guest checkouts too — purchases RLS only allows an authenticated
 // owner to read their own row, which a fresh guest never has.
 export async function GET(request: NextRequest) {
+  const limited = await publicRateLimit(request, 'purchase-status', 60)
+  if (limited) return limited
   const purchaseId = request.nextUrl.searchParams.get('purchaseId')
   if (!purchaseId) return NextResponse.json({ error: 'رقم الطلب مفقود' }, { status: 400 })
+
+  const reader = await purchaseReader(request, purchaseId, request.nextUrl.searchParams.get('access'))
+  if (!reader.guest && !reader.userId) return NextResponse.json({ error: 'سجّلي الدخول أو افتحي رابط الاستلام الحديث من بريدك.' }, { status: 401 })
 
   const { url: sbUrl, key: sbKey } = getSupabaseServerEnv()
   if (!sbUrl || !sbKey) return NextResponse.json({ error: 'الخدمة غير مهيأة' }, { status: 500 })
@@ -28,7 +36,7 @@ export async function GET(request: NextRequest) {
   // just bilingual ones. product_id is included too — it's just a UUID (not
   // sensitive like the fields above) and the Success page needs it for the
   // GA4 purchase event's item_id.
-  const SAFE_COLUMNS = 'id,invoice_number,email,amount,currency,status,downloads_limit,downloads_used,account_created,created_at,product_id'
+  const SAFE_COLUMNS = 'user_id,id,invoice_number,email,amount,currency,status,downloads_limit,downloads_used,account_created,created_at,product_id'
   let { data: purchase, error } = await sb.from('purchases').select(`${SAFE_COLUMNS},book_language`).eq('id', purchaseId).single()
   if (error?.code === '42703') {
     console.error('[purchase-status] purchases.book_language column not found — the migration in supabase/schema.sql §15 has not been run. Retrying without it. RUN THE MIGRATION.')
@@ -38,6 +46,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (error || !purchase) return NextResponse.json({ error: 'الطلب غير موجود' }, { status: 404 })
+
+  if (!reader.guest && purchase.user_id !== reader.userId) return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
 
   // The Success page needs a human display name for whatever language code
   // this purchase has, including a language an admin added after the fact —
@@ -54,5 +64,7 @@ export async function GET(request: NextRequest) {
     if (lang) languageNames = lang
   }
 
-  return NextResponse.json({ data: { ...purchase, tracking_id: snapOrderId(purchase), language_name_ar: languageNames?.name_ar ?? null, language_name_en: languageNames?.name_en ?? null } })
+  if (purchase.status === 'completed') after(() => flushPurchaseEmails(sb, purchaseId))
+  const { user_id: _owner, ...visiblePurchase } = purchase
+  return NextResponse.json({ data: { ...visiblePurchase, tracking_id: snapOrderId(purchase), language_name_ar: languageNames?.name_ar ?? null, language_name_en: languageNames?.name_en ?? null } })
 }

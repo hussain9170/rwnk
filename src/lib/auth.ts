@@ -73,37 +73,10 @@ export async function updateProfile(userId: string, updates: Record<string, stri
   if (error) throw error
 }
 
-// Deliberately does NOT call supabase.auth.signUp() — by the time the
-// Success page is reachable, ensureUserLinked() (src/lib/payment-access.ts)
-// has already run server-side and created this email's Auth account
-// (passwordless — see its comment), so signUp() here would ALWAYS hit
-// "already registered", even for a customer setting a password for the
-// very first time. That used to silently discard the password they just
-// typed and quietly swap in an email-reset link instead — see the comment
-// on /api/account/set-password for the full story and how it tells a
-// still-passwordless account apart from one with a real password already.
-export async function createAccountAfterPurchase(email: string, password: string, purchaseId: string) {
-  const res = await fetch('/api/account/set-password', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ purchaseId, email, password }),
-  })
-  const json = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(json.error ?? 'ERROR')
-
-  if (json.alreadyExists) {
-    // A real password already exists on this account (set on a previous
-    // purchase, or via /register) — never overwritten. Send a reset link
-    // instead so the customer proves they own the inbox before anything
-    // about their credentials changes.
-    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${APP_URL}/auth/callback` })
-    return { alreadyExists: true, user: null }
-  }
-
-  // Password was just set server-side (the admin API that set it has no
-  // concept of a browser session) — sign in now so the customer actually
-  // ends up authenticated, matching what "أنشئي حسابي وحفظ الوصول" promised.
-  const { user } = await signIn(email, password)
-  return { user, alreadyExists: false }
+// Password creation/recovery always proves mailbox ownership first.
+export async function createAccountAfterPurchase(email: string) {
+  await resetPassword(email)
+  return { alreadyExists: true, user: null }
 }
 
 export async function setPasswordFromToken(password: string) {

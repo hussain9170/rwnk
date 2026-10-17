@@ -51,7 +51,7 @@ export function resolveProductFilePath(rawLanguage: string | null | undefined, p
 
   if (language === 'en') {
     if (product?.file_path_en) return { language, filePath: product.file_path_en, degraded: false }
-    const fallback = product?.file_path_ar || product?.file_path || null
+    const fallback = null
     return { language, filePath: fallback, degraded: true }
   }
 

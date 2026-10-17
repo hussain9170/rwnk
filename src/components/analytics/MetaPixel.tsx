@@ -56,7 +56,7 @@ export default function MetaPixel() {
       window.fbq('init', PIXEL_ID)
       initialized.current = true
     }
-    setLoad(true)
+    queueMicrotask(() => setLoad(true))
     if (ready && lastPage.current !== pathname) {
       window.fbq('trackSingle', PIXEL_ID, 'PageView')
       lastPage.current = pathname

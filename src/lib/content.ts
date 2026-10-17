@@ -21,7 +21,8 @@ async function getSb() {
   const { createClient } = await import('@supabase/supabase-js')
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
   ) as any
 }
 
@@ -115,18 +116,13 @@ export async function getComparisonRows(): Promise<ComparisonRow[]> {
 // yet (migration not applied) or genuinely has no active rows, so checkout
 // never renders an empty language picker and can never be fully blocked by
 // this feature.
-const FALLBACK_LANGUAGES: BookLanguage[] = [
-  { id: 'f-ar', language_code: 'ar', name_ar: 'العربية', name_en: 'Arabic', is_active: true, sort_order: 1 },
-  { id: 'f-en', language_code: 'en', name_ar: 'الإنجليزية', name_en: 'English', is_active: true, sort_order: 2 },
-]
-
 export async function getBookLanguages(): Promise<BookLanguage[]> {
   try {
     const sb = await getSb()
-    const { data, error } = await sb.from('book_languages').select('id,language_code,name_ar,name_en,is_active,sort_order').eq('is_active', true).order('sort_order', { ascending: true })
-    if (error || !data || data.length === 0) return FALLBACK_LANGUAGES
-    return data
-  } catch { return FALLBACK_LANGUAGES }
+    const { data, error } = await sb.from('book_languages').select('id,language_code,name_ar,name_en,is_active,sort_order').eq('is_active', true).not('file_path', 'is', null).neq('file_path', '').order('sort_order', { ascending: true })
+    if (error) return []
+    return data ?? []
+  } catch { return [] }
 }
 
 export async function getPage(slug: 'about' | 'terms' | 'privacy' | 'refund'): Promise<PageContent> {
