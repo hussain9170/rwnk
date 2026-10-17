@@ -10,7 +10,7 @@ import { isValidEmail } from '@/lib/auth'
 import { trackViewItem, trackSelectLanguage, trackBeginCheckout, trackAddPaymentInfo } from '@/lib/gtag'
 import { hasSnapConsent } from '@/lib/snap-consent'
 
-const P='#6747B2',PL='#EDE8FF',T1='#1A1228',T2='#4A4060',T3='#9890AA',BR='#EDE8F5'
+const P='#6747B2',PL='#EDE8FF',T1='#1A1228',T2='#4A4060',T3='#6B617E',BR='#EDE8F5'
 const PM=[
   {id:'card',Icon:CardBrandsIcon,label:'بطاقة ائتمان'},
   {id:'knet',Icon:KnetIcon,label:'KNET'},
@@ -117,41 +117,42 @@ export default function CheckoutPage() {
         )}
 
         <div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:16,padding:20,marginBottom:14}}>
-          <div style={{fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:14}}>لغة الكتاب</div>
+          <div style={{fontSize:12,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:14}}>لغة الكتاب</div>
+          <p style={{fontSize:14,color:T2,lineHeight:1.8,marginBottom:14}}>يشمل الطلب نسخة واحدة باللغة المختارة بسعر {priceLabel}، وليس جميع اللغات.</p>
           <div className="checkout-lang-grid" role="radiogroup" aria-label="لغة الكتاب" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:8}}>
             {languages.map(l=>(
               <button key={l.language_code} type="button" role="radio" aria-checked={bookLanguage===l.language_code} onClick={()=>{setBookLanguage(l.language_code); trackSelectLanguage(l.language_code)}}
                 style={{minHeight:52,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:1,border:`1.5px solid ${bookLanguage===l.language_code?P:BR}`,background:bookLanguage===l.language_code?PL:'#fff',borderRadius:10,cursor:'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",transition:'all .15s',padding:'6px 8px'}}>
                 <span style={{fontSize:13,fontWeight:700,color:bookLanguage===l.language_code?P:T2}}>{l.name_ar}</span>
-                <span style={{fontSize:10,color:bookLanguage===l.language_code?P:T3}}>{l.name_en}</span>
+                <span style={{fontSize:12,color:bookLanguage===l.language_code?P:T3}}>{l.name_en}</span>
               </button>
             ))}
           </div>
         </div>
 
         <div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:16,padding:20,marginBottom:14}}>
-          <label htmlFor="checkout-email" style={{display:'block',fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:14}}>بريدك الإلكتروني</label>
+          <label htmlFor="checkout-email" style={{display:'block',fontSize:12,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:14}}>بريدك الإلكتروني</label>
           <input id="checkout-email" type="email" placeholder="example@email.com" dir="ltr" autoComplete="email" required
             value={email} onChange={e=>{setEmail(e.target.value); if(error) setError('')}} onFocus={focus} onBlur={blur}
             aria-invalid={!!error} aria-describedby={error?'checkout-email-error':undefined}
             style={{...inp,height:48,fontSize:14}}/>
-          <p style={{fontSize:11,color:T3,marginTop:6}}>سيُرسل الكتاب لهذا البريد · ستنشأ حسابك تلقائياً بعد الدفع</p>
+          <p style={{fontSize:12,color:T3,marginTop:6}}>سيُرسل الكتاب لهذا البريد · سيُنشأ حسابك تلقائياً بعد الدفع</p>
           {error && <p id="checkout-email-error" role="alert" style={{fontSize:12,color:'#A32D2D',marginTop:8,padding:'8px 12px',background:'#FEF2F2',borderRadius:8}}>{error}</p>}
 
-          <label htmlFor="checkout-name" style={{display:'block',fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',margin:'16px 0 14px'}}>الاسم <span style={{fontWeight:400,color:T3,textTransform:'none'}}>(اختياري)</span></label>
+          <label htmlFor="checkout-name" style={{display:'block',fontSize:12,fontWeight:900,color:P,textTransform:'uppercase',margin:'16px 0 14px'}}>الاسم <span style={{fontWeight:400,color:T3,textTransform:'none'}}>(اختياري)</span></label>
           <input id="checkout-name" type="text" placeholder="اسمك الكامل" autoComplete="name"
             value={customerName} onChange={e=>setCustomerName(e.target.value)} onFocus={focus} onBlur={blur}
             style={{...inp,height:48,fontSize:14}}/>
         </div>
 
         <div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:16,padding:20}}>
-          <div style={{fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:14}}>طريقة الدفع</div>
+          <div style={{fontSize:12,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:14}}>طريقة الدفع</div>
           <div className="checkout-pm-grid" role="radiogroup" aria-label="طريقة الدفع" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:16}}>
             {PM.map(m=>(
               <button key={m.id} type="button" role="radio" aria-checked={pm===m.id} onClick={()=>setPm(m.id)}
                 style={{minHeight:44,border:`1.5px solid ${pm===m.id?P:BR}`,background:pm===m.id?PL:'#fff',borderRadius:10,padding:'10px 8px',textAlign:'center',cursor:'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif"}}>
                 <div style={{display:'flex',justifyContent:'center',marginBottom:5}}><m.Icon height={20} /></div>
-                <div style={{fontSize:11,fontWeight:700,color:T2}}>{m.label}</div>
+                <div style={{fontSize:12,fontWeight:700,color:T2}}>{m.label}</div>
               </button>
             ))}
           </div>
@@ -168,13 +169,13 @@ export default function CheckoutPage() {
           <div style={{width:46,height:62,borderRadius:9,flexShrink:0,background:'linear-gradient(145deg,#6747B2,#8b6dd4)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>📖</div>
           <div>
             <div style={{fontSize:13,fontWeight:900,color:T1,marginBottom:2}}>{settings.product_name}</div>
-            <div style={{fontSize:11,color:T3,display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
+            <div style={{fontSize:12,color:T3,display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
               دليل التنظيف — PDF
               <span style={{display:'inline-flex',alignItems:'center',gap:3,fontWeight:700,color:P,background:'#fff',padding:'1px 7px',borderRadius:999,border:`1px solid ${BR}`}}>
                 {languages.find(l=>l.language_code===bookLanguage)?.name_ar ?? bookLanguage}
               </span>
             </div>
-            <div style={{fontSize:11,fontWeight:700,color:P,marginTop:3}}>⚡ تحميل فوري + {settings.downloads_limit} تحميلات</div>
+            <div style={{fontSize:12,fontWeight:700,color:P,marginTop:3}}>⚡ تحميل فوري + {settings.downloads_limit} تحميلات</div>
           </div>
         </div>
         <div style={{borderTop:`1px solid ${BR}`,paddingTop:14,marginBottom:14}}>
@@ -185,20 +186,17 @@ export default function CheckoutPage() {
               <span style={{fontWeight:900,color:P}}>{priceLabel}</span>
             </span>
           </div>
-          {[{l:'ضريبة القيمة المضافة',v:'0 د.ك'},{l:'الشحن',v:'مجاني',g:true}].map((r,i)=>(
-            <div key={i} style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:9}}>
-              <span style={{color:T3}}>{r.l}</span><span style={{fontWeight:700,color:r.g?'#085041':T1}}>{r.v}</span>
-            </div>
-          ))}
+          <p style={{fontSize:13,color:T2,lineHeight:1.8}}>منتج رقمي — لا يوجد شحن ورقي.</p>
         </div>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 0',borderTop:`1px solid ${BR}`,marginBottom:20}}>
           <span style={{fontSize:14,fontWeight:900,color:T1}}>الإجمالي</span>
           <span style={{fontSize:26,fontWeight:900,color:P,letterSpacing:-0.5}}>{price} <span style={{fontSize:13,fontWeight:400,color:T3,letterSpacing:'normal'}}>د.ك</span></span>
         </div>
         <button onClick={handlePay} disabled={loading} aria-busy={loading} style={{width:'100%',height:52,background:loading?'#8b6dd4':P,color:'#fff',border:'none',borderRadius:12,fontSize:15,fontWeight:900,cursor:loading?'wait':'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",boxShadow:'0 2px 12px rgba(103,71,178,.28)'}}>
-          {loading?'جاري التحويل لبوابة الدفع...':`ادفع الآن — ${priceLabel}`}
+          {loading?'جاري التحويل لبوابة الدفع...':`ادفعي الآن — ${priceLabel}`}
         </button>
-        <p style={{textAlign:'center',fontSize:11,color:T3,marginTop:8}}>مدفوعات مشفّرة وآمنة</p>
+        <p style={{fontSize:13,color:T2,lineHeight:1.9,marginTop:16}}>راجعي <Link href="/terms" style={{color:P,textDecoration:'underline'}}>شروط الاستخدام</Link> و<Link href="/refund" style={{color:P,textDecoration:'underline'}}>سياسة الاسترجاع</Link> قبل الشراء. توضّح <Link href="/privacy" style={{color:P,textDecoration:'underline'}}>سياسة الخصوصية</Link> كيفية استخدام بياناتك.</p>
+        <p style={{textAlign:'center',fontSize:12,color:T3,marginTop:12}}>للمساعدة: <a href={`mailto:${settings.email}`} dir="ltr" style={{color:P,textDecoration:'underline'}}>{settings.email}</a></p>
         <div style={{flex:1}}/>
         <Link href="/" style={{display:'block',textAlign:'center',fontSize:12,color:T3,marginTop:20,textDecoration:'none'}}>← العودة للرئيسية</Link>
       </div>

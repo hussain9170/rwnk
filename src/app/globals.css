@@ -8,7 +8,7 @@
   --s:#36DB9C; --sb:#E1F5EE;
   --h:#FCB932; --hb:#FAEEDA;
   --bg:#FFFFFF; --sf:#FAFAFA;
-  --t1:#1A1228; --t2:#4A4060; --t3:#9890AA; --t4:#C8C0D8;
+  --t1:#1A1228; --t2:#4A4060; --t3:#6B617E; --t4:#C8C0D8;
   --br:#EDE8F5; --br2:#DDD6F0;
   --err:#E24B4A; --errb:#FEF2F2;
 }
@@ -213,3 +213,7 @@ table { max-width: 100%; }
   }
   .admin-icon-btn { width: 44px !important; height: 44px !important; }
 }
+
+/* Consistent section offsets and comfortable keyboard targets. */
+[id] { scroll-margin-top: 88px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

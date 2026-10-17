@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { label: 'المميزات',       href: '/#features'  },
   { label: 'الخطوات',        href: '/#steps'     },
   { label: 'الأسئلة الشائعة', href: '/#faq'     },
-  { label: 'مقارنة بالسوق', href: '/#compare'   },
+  { label: 'محتويات الدليل', href: '/#compare'   },
 ]
 
 export default function Navbar({ rightContent }: NavbarProps) {
@@ -85,7 +85,7 @@ export default function Navbar({ rightContent }: NavbarProps) {
               }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = C.primaryDark }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = C.primary }}>
-                اشترِ الآن
+                اشتري الآن
               </Link>
             </div>
 
@@ -139,7 +139,7 @@ export default function Navbar({ rightContent }: NavbarProps) {
               padding: '14px', borderRadius: 11, textDecoration: 'none',
               boxShadow: '0 2px 12px rgba(103,71,178,.28)',
             }}>
-              اشترِ الآن
+              اشتري الآن
             </Link>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { REFUND_CONTENT, TERMS_CONTENT, ABOUT_CONTENT } from './policy-copy'
 // Public content fetchers — read-only, anon key.
 // Every function falls back to today's hardcoded copy so the site
 // still renders correctly before the CMS migration has been run.
@@ -33,8 +34,8 @@ const FALLBACK_TESTIMONIALS: Testimonial[] = [
 const FALLBACK_FAQS: Faq[] = [
   { id: 'f1', question: 'كيف أستلم الكتاب بعد الشراء؟', answer: 'تحميل فوري — بعد الدفع تصلك رسالة برابط التحميل المباشر.', sort_order: 1, is_active: true },
   { id: 'f2', question: 'هل يمكنني طباعة الكتاب؟',      answer: 'نعم، مصمم للطباعة. القوائم والجداول بتنسيق A4 جاهز.',       sort_order: 2, is_active: true },
-  { id: 'f3', question: 'هل يناسب كل أنواع المنازل؟',   answer: 'نعم، ليناسب الشقق والفلل بمختلف أحجامها في منطقة الخليج.',  sort_order: 3, is_active: true },
-  { id: 'f4', question: 'هل هناك تحديثات مستقبلية؟',    answer: 'نعم، جميع التحديثات مجانية لمن اشترى النسخة الأولى.',      sort_order: 4, is_active: true },
+  { id: 'f3', question: 'هل يناسب كل أنواع المنازل؟',   answer: 'يمكن تطبيق الروتين في الشقق والفلل مع تكييف المهام بحسب المساحة والأسطح واحتياج المنزل.',  sort_order: 3, is_active: true },
+  { id: 'f4', question: 'هل هناك تحديثات مستقبلية؟',    answer: 'أي تحديث نصدره للدليل المشترى باللغة نفسها يكون مجانياً للمشتريات الحالية؛ لا يوجد موعد محدد لتحديث جديد.',      sort_order: 4, is_active: true },
 ]
 
 const FALLBACK_FEATURES: Feature[] = [
@@ -55,12 +56,12 @@ const FALLBACK_PAGES: Record<string, PageContent> = {
   about: {
     slug: 'about', title: 'من نحن',
     meta_description: 'تعرّفي على قصة رَوْنَق ورسالتنا في رفع مستوى التنظيف المنزلي.',
-    content: 'رَوْنَق دليل تدريبي رقمي يهدف إلى رفع مستوى التنظيف المنزلي إلى معايير الفنادق الخمس نجوم.\n\nنؤمن أن كل منزل يستحق العناية والدقة نفسها التي تحصل عليها أفخم الفنادق، دون الحاجة إلى خبرة سابقة أو تدريب مكلف.\n\nفريقنا صمّم هذا الدليل بالتعاون مع خبراء تنظيف محترفين، ليكون مرجعاً عملياً وسهل التطبيق لأي عاملة منزلية أو ربة بيت في منطقة الخليج.',
+    content: ABOUT_CONTENT,
   },
   terms: {
     slug: 'terms', title: 'شروط الاستخدام',
     meta_description: 'الشروط والأحكام الخاصة باستخدام موقع وخدمات رَوْنَق.',
-    content: 'باستخدامك لموقع رَوْنَق وشراء منتجاتنا الرقمية، فإنك توافقين على الشروط التالية:\n\nالمنتج رقمي بالكامل (ملف PDF) ويُسلَّم فور إتمام الدفع عبر رابط تحميل آمن.\n\nيُمنع إعادة بيع أو توزيع أو نشر محتوى الدليل دون إذن كتابي مسبق.\n\nنحتفظ بحقنا في تحديث محتوى الدليل وأسعاره في أي وقت دون إشعار مسبق للمشتريات المستقبلية.\n\nجميع المشتريات الحالية تحصل على التحديثات مجانًا مدى الحياة.',
+    content: TERMS_CONTENT,
   },
   privacy: {
     slug: 'privacy', title: 'سياسة الخصوصية',
@@ -70,7 +71,7 @@ const FALLBACK_PAGES: Record<string, PageContent> = {
   refund: {
     slug: 'refund', title: 'سياسة الاسترجاع',
     meta_description: 'سياسة الاسترجاع الخاصة بمنتجات رَوْنَق الرقمية.',
-    content: 'كتاب رَوْنَق منتج رقمي (PDF) يُسلَّم فور إتمام الدفع عبر رابط تحميل فوري.\n\nنظراً لطبيعة المنتج الرقمي القابلة للتحميل الفوري، لا يمكن استرجاع المبلغ بعد إتمام عملية الشراء والتحميل.\n\nإذا واجهتِ مشكلة تقنية في التحميل، أو تم خصم المبلغ منك أكثر من مرة عن طريق الخطأ، تواصلي معنا فوراً عبر البريد الإلكتروني مع ذكر رقم الفاتورة وسنساعدك في حل المشكلة.',
+    content: REFUND_CONTENT,
   },
 }
 
