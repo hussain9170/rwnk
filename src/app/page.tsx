@@ -184,7 +184,7 @@ export default async function HomePage() {
         <div style={{fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:8}}>الحل</div>
         <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:8}}>رَوْنَق — النظام الذي كنتِ تبحثين عنه</h2>
         <p style={{fontSize:15,color:T2,marginBottom:32}}>دليل تدريبي رقمي مبني على معايير الفنادق الفاخرة.</p>
-        <div className="grid-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+        <div id="content" className="grid-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,scrollMarginTop:96}}>
           {features.map((f)=>{
             const Icon = ICON_MAP[f.icon] ?? IconCircleCheck
             return (
