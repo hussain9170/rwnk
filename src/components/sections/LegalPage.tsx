@@ -17,6 +17,12 @@ export function LegalPage({ page, settings }: { page: PageContent; settings: Sto
           {paragraphs.map((p, i) => (
             <p key={i} style={{ fontSize: 15, color: T2, lineHeight: 1.9, marginBottom: 18 }}>{p}</p>
           ))}
+          <p style={{ fontSize: 15, color: T2, lineHeight: 1.9, marginTop: 28 }}>
+            للتواصل والدعم: {' '}
+            <a href={`mailto:${settings.email}`} dir="ltr" style={{ display: 'inline-block', color: '#6747B2', textUnderlineOffset: 4 }}>
+              {settings.email}
+            </a>
+          </p>
         </div>
       </main>
       <Footer settings={settings} />
