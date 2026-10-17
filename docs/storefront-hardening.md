@@ -12,15 +12,15 @@
 - Download resolution never substitutes Arabic for a missing English file.
 - Dependencies updated; security response headers added; error-level lint findings resolved. Existing type warnings remain tracked, not disabled.
 
-## Prepared database change — NOT APPLIED
+## Production database activation — 18 October 2026, Kuwait time
 
-`supabase/migrations/20261017231557_storefront_hardening.sql` is prepared and requires separate production approval. It is not installed.
+`supabase/migrations/20261017231557_storefront_hardening.sql` was explicitly approved and applied to production as migration `20261017234928_storefront_hardening` (17 October 2026 23:49 UTC / 18 October 2026 02:49 Kuwait).
 
 It adds two RLS-protected server-only tables (`request_limits`, `purchase_email_outbox`), service-role-only functions, an email enqueue trigger for future completed purchases, and eight foreign-key indexes. It does not delete orders, change prices, or backfill/send old customer emails.
 
-Before approval, the application preserves direct confirmation-email delivery and uses a per-process limiter. Shared limits and durable retries only activate after the migration is explicitly approved and applied. The application never runs DDL itself.
+Shared rate limits and the durable confirmation-email queue are now installed. RLS and grants were verified: anonymous and customer roles cannot read the new tables or execute the three server functions; service-role access is enabled. The completion trigger and all eight indexes are present. No historical emails were queued. The rate-limit function passed allow/allow/block assertions in a rolled-back transaction, and the live receipt route still rejects anonymous access. The application never runs DDL itself.
 
-The queue saves one payload and provider idempotency key per purchase, claims work with a two-minute lease, tries at most five times, and stops automatic retry after 23 hours from the first attempt (inside Resend's 24-hour deduplication window). Exhausted jobs require investigation; they are not silently marked sent. The existing protected cron and authorized receipt visits drain eligible jobs.
+The queue saves one payload and provider idempotency key per purchase, claims work with a two-minute lease, tries at most five times, and stops automatic retry after 23 hours from the first attempt (inside Resend's 24-hour deduplication window). Exhausted jobs require investigation; they are not silently marked sent. Completion handling, the existing protected daily cron and authorized receipt visits drain eligible jobs. The daily schedule does not guarantee a retry within 23 hours for every failed job; a more frequent authenticated scheduler remains an operational improvement. No real customer email was sent for this activation test.
 
 ## Validation
 
