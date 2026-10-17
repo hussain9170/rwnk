@@ -42,7 +42,7 @@ const TRUST = [
   { icon: IconShieldCheck,  text: 'دفع آمن ومشفّر'          },
 ]
 
-export default function Footer({ settings }: { settings?: StoreSettings }) {
+export default function Footer({ settings, showCta = true }: { settings?: StoreSettings; showCta?: boolean }) {
   const S = settings ?? DEFAULT_SETTINGS
   const LINKS = buildLinks(S)
   const SOCIAL = buildSocial(S)
@@ -51,21 +51,23 @@ export default function Footer({ settings }: { settings?: StoreSettings }) {
     <footer style={{ background: C.text1, color: '#fff', fontFamily: "var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif", direction: 'rtl' }}>
 
       {/* CTA Banner */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: 'clamp(32px,7vw,52px) clamp(20px,6vw,40px)' }}>
+      {showCta && <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: 'clamp(32px,7vw,52px) clamp(20px,6vw,40px)' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
           <div>
             <div style={{ fontSize: 24, fontWeight: 900, marginBottom: 6 }}>{S.footer_cta_title}</div>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.65 }}>{S.footer_cta_subtitle}</p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.65 }}>{S.footer_cta_subtitle}</p>
           </div>
           <Link href="/checkout" style={{
             background: C.primary, color: '#fff', fontSize: 14, fontWeight: 900,
             padding: '14px 28px', borderRadius: 12, display: 'inline-block',
             boxShadow: '0 4px 20px rgba(103,71,178,.5)', flexShrink: 0, textDecoration: 'none',
           }}>
-            اشترِ الآن — {S.product_price} د.ك
+            اشتري الآن — {S.product_price} د.ك
           </Link>
         </div>
       </div>
+
+      }
 
       {/* Links grid */}
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: 'clamp(32px,7vw,48px) clamp(20px,6vw,40px)' }}>
@@ -77,8 +79,8 @@ export default function Footer({ settings }: { settings?: StoreSettings }) {
               <Image src="/logo-icon.png" alt={S.store_name} width={26} height={31} style={{ width:26, height:31, objectFit: 'contain', flexShrink: 0 }} />
               <span style={{ fontSize: 17, fontWeight: 900 }}>{S.store_name}</span>
             </div>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', lineHeight: 1.75, maxWidth: 210, marginBottom: 22 }}>
-              {S.store_tagline} — الدليل الأول للتنظيف المنزلي بمعايير الفنادق الراقية.
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.75, maxWidth: 210, marginBottom: 22 }}>
+              {S.store_tagline} — مرجع عملي لتدريب العاملة وتنظيم التنظيف المنزلي.
             </p>
 
             {/* Support contact */}
@@ -94,10 +96,10 @@ export default function Footer({ settings }: { settings?: StoreSettings }) {
                   background: 'rgba(255,255,255,0.06)',
                   border: '1px solid rgba(255,255,255,0.1)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'rgba(255,255,255,0.5)', transition: 'all .2s',
+                  color: 'rgba(255,255,255,0.8)', transition: 'all .2s',
                 }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)' }}
                 >
                   <Icon size={16} />
                 </Link>
@@ -107,8 +109,8 @@ export default function Footer({ settings }: { settings?: StoreSettings }) {
             {/* Trust */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {TRUST.map(({ icon: Icon, text }) => (
-                <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
-                  <Icon size={13} color="rgba(255,255,255,0.3)" />
+                <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+                  <Icon size={13} color="rgba(255,255,255,0.75)" />
                   {text}
                 </div>
               ))}
@@ -118,7 +120,7 @@ export default function Footer({ settings }: { settings?: StoreSettings }) {
           {/* Link columns */}
           {Object.entries(LINKS).map(([title, links]) => (
             <div key={title}>
-              <div style={{ fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.22)', textTransform: 'uppercase', marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 900, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', marginBottom: 16 }}>
                 {title}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -128,10 +130,10 @@ export default function Footer({ settings }: { settings?: StoreSettings }) {
                   const FooterLink = link.href.includes('#') ? 'a' : Link
                   return (
                   <FooterLink key={link.href} href={link.href} style={{
-                    fontSize: 13, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', transition: 'color .18s',
+                    fontSize: 13, color: 'rgba(255,255,255,0.8)', textDecoration: 'none', transition: 'color .18s',
                   }}
                     onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}
                   >
                     {link.label}
                   </FooterLink>
@@ -146,12 +148,12 @@ export default function Footer({ settings }: { settings?: StoreSettings }) {
       {/* Bottom bar */}
       <div style={{ padding: '18px clamp(20px,6vw,40px)' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)' }}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
             © {new Date().getFullYear()} {S.store_name} — جميع الحقوق محفوظة
           </span>
           <div style={{ display: 'flex', gap: 6 }}>
             {['KW', 'SA', 'AE', 'BH'].map(c => (
-              <span key={c} style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.05)', padding: '2px 7px', borderRadius: 5 }}>{c}</span>
+              <span key={c} style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.05)', padding: '2px 7px', borderRadius: 5 }}>{c}</span>
             ))}
           </div>
         </div>

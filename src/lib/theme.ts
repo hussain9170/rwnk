@@ -20,7 +20,7 @@ export const defaultTheme = {
     border2:    '#DDD6F0',
     text1:      '#1A1228',
     text2:      '#4A4060',
-    text3:      '#9890AA',
+    text3:      '#6B617E',
     text4:      '#C8C0D8',
     error:      '#E24B4A',
     errorBg:    '#FEF2F2',
