@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import Image from 'next/image'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 import { ReactNode, useEffect, useState } from 'react'
 import { C } from '@/lib/theme'
 import { IconMenu2, IconX } from '@tabler/icons-react'
@@ -31,7 +31,7 @@ export default function Navbar({ rightContent }: NavbarProps) {
   return (
     <>
     <nav className="navbar-root" style={{
-      position: 'fixed', top: 0, left: 0, right: 0, height: 60, zIndex: 100,
+      position: 'fixed', top: 0, left: 0, right: 0, height: 68, zIndex: 100,
       background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(20px)',
       borderBottom: `1px solid ${C.border}`,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -40,9 +40,8 @@ export default function Navbar({ rightContent }: NavbarProps) {
     }}>
 
       {/* Logo */}
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', flexShrink: 0 }}>
-        <Image src="/logo-icon.png" alt="رَوْنَق" width={28} height={33} style={{ width: 28, height: 33, objectFit: 'contain', flexShrink: 0 }} />
-        <span style={{ fontSize: 17, fontWeight: 900, color: C.text1 }}>رَوْنَق</span>
+      <Link href="/" aria-label="رَوْنَق — الرئيسية" style={{ display: 'flex', alignItems: 'center', color: C.text1, textDecoration: 'none', flexShrink: 0 }}>
+        <BrandLogo />
       </Link>
 
       {/* Center links */}
