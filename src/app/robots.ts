@@ -1,9 +1,10 @@
 import { MetadataRoute } from 'next'
+import { SITE_URL } from '@/lib/seo'
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       { userAgent: '*', allow: '/', disallow: ['/admin', '/api', '/auth', '/library', '/account'] },
     ],
-    sitemap: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.rwnak.net'}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   }
 }

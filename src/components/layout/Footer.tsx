@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import Image from 'next/image'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 import { C } from '@/lib/theme'
 import { DEFAULT_SETTINGS, type StoreSettings } from '@/lib/store-settings'
 import {
@@ -23,6 +23,7 @@ function buildLinks(S: StoreSettings) {
     'الدعم': [
       { label: 'من نحن',           href: '/about'   },
       { label: 'الأسئلة الشائعة', href: '/faq'     },
+      { label: 'نصائح تدريب العاملة', href: '/guides' },
       { label: 'سياسة الخصوصية',  href: '/privacy' },
       { label: 'شروط الاستخدام',  href: '/terms'   },
       { label: 'سياسة الاسترجاع', href: '/refund'  },
@@ -76,8 +77,7 @@ export default function Footer({ settings, showCta = true }: { settings?: StoreS
           {/* Brand */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <Image src="/logo-icon.png" alt={S.store_name} width={26} height={31} style={{ width:26, height:31, objectFit: 'contain', flexShrink: 0 }} />
-              <span style={{ fontSize: 17, fontWeight: 900 }}>{S.store_name}</span>
+              <BrandLogo name={S.store_name} compact />
             </div>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.75, maxWidth: 210, marginBottom: 22 }}>
               {S.store_tagline} — مرجع عملي لتدريب العاملة وتنظيم التنظيف المنزلي.

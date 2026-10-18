@@ -11,6 +11,8 @@ import {
 import { getStoreSettings, splitHighlight } from '@/lib/store-settings'
 import { getTestimonials, getFaqs, getFeatures, getBookLanguages } from '@/lib/content'
 import { HeroIllustration } from '@/components/ui/HeroIllustration'
+import { SITE_URL, publicMetadata, jsonLd } from '@/lib/seo'
+import { GUIDES } from '@/lib/guides'
 
 // Force per-request rendering rather than relying on on-demand ISR
 // (revalidatePath) alone to keep this page in sync with admin edits. Without
@@ -30,21 +32,7 @@ export const dynamic = 'force-dynamic'
 
 const P='#6747B2',PL='#EDE8FF',PT='#26215C',T1='#1A1228',T2='#4A4060',T3='#6B617E',BR='#EDE8F5'
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/' },
-  title: 'رَوْنَق — دليل التنظيف الاحترافي',
-  description: 'دليل عملي لتدريب العاملة وتنظيم التنظيف المنزلي بخطوات وقوائم مستوحاة من الضيافة الفندقية. تحميل فوري بعد الدفع.',
-  openGraph: {
-    title: 'رَوْنَق — دليل التنظيف الاحترافي',
-    description: 'دليل عملي لتدريب العاملة وتنظيم التنظيف المنزلي',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'رَوْنَق — دليل التنظيف الاحترافي',
-    description: 'دليل عملي لتدريب العاملة وتنظيم التنظيف المنزلي',
-  },
-}
+export const metadata: Metadata = publicMetadata('دليل تدريب العاملة وتنظيم تنظيف المنزل', 'رونق دليل PDF لتدريب العاملة المنزلية وتنظيم تنظيف البيت في الكويت والخليج. خطوات غرفة بغرفة وقوائم متابعة وجداول قابلة للطباعة، باللغة المختارة.', '/')
 
 const ICON_MAP: Record<string, typeof IconStarFilled> = {
   IconStarFilled, IconCheck, IconCalendar, IconPhoto, IconBook2,
@@ -61,23 +49,31 @@ export default async function HomePage() {
   const productJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
+    '@id': `${SITE_URL}/#product`,
     name: settings.product_name,
     description: settings.product_description,
     image: [settings.product_image_url || settings.hero_image_url || 'https://www.rwnak.net/rwnak-guide-preview.png'],
     brand: { '@type': 'Brand', name: 'رَوْنَق' },
     sku: settings.product_id,
+    category: 'دليل رقمي للتنظيف المنزلي بصيغة PDF',
+    url: SITE_URL,
     offers: {
       '@type': 'Offer',
       price: settings.product_price,
       priceCurrency: settings.product_currency,
       availability: 'https://schema.org/InStock',
-      url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.rwnak.net'}/checkout`,
+      url: `${SITE_URL}/#pricing`,
+      seller: { '@id': `${SITE_URL}/#organization` },
     },
   }
 
   return (
     <div style={{fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl',background:'#fff',color:T1}}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd).replace(/</g, '\\u003c') }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd([
+        { '@context': 'https://schema.org', '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'رَوْنَق', alternateName: ['رونق', 'RWNAK'], url: SITE_URL, logo: `${SITE_URL}/logo-icon.png`, email: settings.email },
+        { '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${SITE_URL}/#website`, name: 'رَوْنَق', alternateName: ['رونق', 'RWNAK'], url: SITE_URL, inLanguage: 'ar', publisher: { '@id': `${SITE_URL}/#organization` } },
+        productJsonLd,
+      ]) }} />
       <Navbar />
 
       <main>
@@ -297,6 +293,13 @@ export default async function HomePage() {
           </Link>
         </div>
       </div>
+
+      <section style={{maxWidth:1000,margin:'0 auto',padding:'48px clamp(20px,6vw,40px)'}} aria-labelledby="guides-heading">
+        <h2 id="guides-heading" style={{fontSize:'clamp(22px,4.5vw,30px)',marginBottom:12}}>نصائح لتدريب العاملة وتنظيم تنظيف البيت</h2>
+        <p style={{fontSize:16,color:T2,lineHeight:1.8}}>ابدئي بخطوات واضحة تناسب بيتك، من شرح المهمة إلى جدول التنظيف ومراجعة النتيجة.</p>
+        <div className="guide-cards">{GUIDES.map(guide=><article className="guide-card" key={guide.slug}><h3 style={{fontSize:19,lineHeight:1.6,marginBottom:12}}><Link href={`/guides/${guide.slug}`}>{guide.title}</Link></h3><p style={{fontSize:15,lineHeight:1.8,color:T2}}>{guide.description}</p><Link className="guide-link" href={`/guides/${guide.slug}`}>اقرئي الخطوات ←</Link></article>)}</div>
+        <Link href="/guides" className="guide-link">كل النصائح المنزلية ←</Link>
+      </section>
 
       {/* ── FAQ ── */}
       <div id="faq" style={{background:'#FAFAFA',borderTop:`1px solid ${BR}`}}>

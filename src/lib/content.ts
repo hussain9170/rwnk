@@ -4,17 +4,11 @@ import { REFUND_CONTENT, TERMS_CONTENT, ABOUT_CONTENT } from './policy-copy'
 // still renders correctly before the CMS migration has been run.
 
 import type { Metadata } from 'next'
+import { publicMetadata } from './seo'
 import type { Testimonial, Faq, Feature, ComparisonRow, PageContent, BookLanguage } from '@/types'
 
 export function pageMetadata(page: PageContent): Metadata {
-  const description = page.meta_description ?? undefined
-  return {
-    title: page.title,
-    alternates: { canonical: `/${page.slug}` },
-    description,
-    openGraph: { title: `${page.title} | رَوْنَق`, description, type: 'website' },
-    twitter: { card: 'summary_large_image', title: `${page.title} | رَوْنَق`, description },
-  }
+  return publicMetadata(page.title, page.meta_description ?? `${page.title} في رَوْنَق، دليل تدريب العاملة وتنظيم التنظيف المنزلي.`, `/${page.slug}`)
 }
 
 async function getSb() {

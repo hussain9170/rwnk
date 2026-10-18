@@ -5,30 +5,33 @@ import MetaPixel from '@/components/analytics/MetaPixel'
 import SnapPixel from '@/components/analytics/SnapPixel'
 import SnapConsent from '@/components/analytics/SnapConsent'
 import './globals.css'
+import { SITE_URL, SHARE_IMAGE } from '@/lib/seo'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.rwnak.net'
+const APP_URL = SITE_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: 'رَوْنَق — دليل التنظيف الاحترافي',
+    default: 'رَوْنَق — دليل تدريب العاملة وتنظيم تنظيف المنزل',
     template: '%s | رَوْنَق',
   },
-  description: 'دليل تدريبي احترافي يحوّل عاملتك المنزلية إلى خبيرة تنظيف بمعايير الفنادق الخمس نجوم. تحميل فوري بعد الدفع.',
+  description: 'دليل PDF لتدريب العاملة المنزلية وتنظيم التنظيف في الكويت والخليج، مع خطوات وقوائم متابعة وجداول قابلة للطباعة. اختاري لغة الدليل وحمّليه بعد الدفع.',
   keywords: ['تنظيف منزلي', 'تدريب عاملات', 'دليل تنظيف', 'تنظيف احترافي', 'رونق', 'الكويت'],
   authors: [{ name: 'رَوْنَق', url: APP_URL }],
   openGraph: {
     title: 'رَوْنَق — دليل التنظيف الاحترافي',
-    description: 'دليل تدريبي يحوّل عاملتك إلى خبيرة تنظيف بمعايير 5 نجوم',
+    description: 'دليل PDF لتدريب العاملة وتنظيم التنظيف المنزلي بخطوات وقوائم وجداول قابلة للطباعة.',
     url: APP_URL,
     siteName: 'رَوْنَق',
     locale: 'ar_KW',
     type: 'website',
+    images: [SHARE_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'رَوْنَق — دليل التنظيف الاحترافي',
-    description: 'دليل تدريبي يحوّل عاملتك إلى خبيرة تنظيف',
+    description: 'دليل PDF لتدريب العاملة وتنظيم التنظيف المنزلي.',
+    images: [SHARE_IMAGE.url],
   },
   robots: { index: true, follow: true },
 }

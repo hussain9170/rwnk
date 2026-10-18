@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 import { CardBrandsIcon, KnetIcon, ApplePayIcon } from '@/components/ui/PaymentIcons'
 import { type StoreSettings } from '@/lib/store-settings'
 import type { BookLanguage } from '@/types'
@@ -90,9 +90,8 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
     <main className="checkout-shell" style={{width:'100%',minHeight:'100vh',display:'grid',gridTemplateColumns:'1fr 400px',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl',background:'#fff'}}>
       <div className="checkout-col-main" style={{overflowY:'auto',padding:'clamp(20px,5vw,32px) clamp(16px,5vw,40px)',backgroundImage:'radial-gradient(circle,rgba(103,71,178,0.04) 1px,transparent 1px)',backgroundSize:'28px 28px'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:28,flexWrap:'wrap',gap:8}}>
-          <Link href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
-            <Image src="/logo-icon.png" alt="رَوْنَق" width={26} height={31} style={{width:26,height:31,objectFit:'contain',flexShrink:0}}/>
-            <span style={{fontSize:16,fontWeight:900,color:T1}}>رَوْنَق</span>
+          <Link href="/" aria-label="رَوْنَق — الرئيسية" style={{display:'flex',alignItems:'center',color:T1,textDecoration:'none'}}>
+            <BrandLogo compact />
           </Link>
           <span style={{fontSize:12,color:T3}}>دفع آمن ومشفّر</span>
         </div>
