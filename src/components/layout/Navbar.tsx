@@ -9,10 +9,10 @@ interface NavbarProps { rightContent?: ReactNode }
 
 const NAV_LINKS = [
   { label: 'الرئيسية',       href: '/'          },
-  { label: 'المميزات',       href: '/#features'  },
-  { label: 'الخطوات',        href: '/#steps'     },
+  { label: 'محتويات الدليل', href: '/#content'   },
+  { label: 'طريقة الاستخدام', href: '/#steps'     },
+  { label: 'السعر',          href: '/#pricing'   },
   { label: 'الأسئلة الشائعة', href: '/#faq'     },
-  { label: 'محتويات الدليل', href: '/#compare'   },
 ]
 
 export default function Navbar({ rightContent }: NavbarProps) {
@@ -25,7 +25,17 @@ export default function Navbar({ rightContent }: NavbarProps) {
     if (!open) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        document.getElementById('mobile-menu-toggle')?.focus()
+      }
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', closeOnEscape)
+    }
   }, [open])
 
   return (
@@ -48,7 +58,7 @@ export default function Navbar({ rightContent }: NavbarProps) {
       {!rightContent && (
         <div className="navbar-links" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {NAV_LINKS.map(link => (
-            <Link key={link.href} href={link.href}
+            <a key={link.href} href={link.href}
               onMouseEnter={() => setHov(link.href)}
               onMouseLeave={() => setHov(null)}
               style={{
@@ -59,7 +69,7 @@ export default function Navbar({ rightContent }: NavbarProps) {
                 transition: 'all .18s',
               }}>
               {link.label}
-            </Link>
+            </a>
           ))}
         </div>
       )}
@@ -88,16 +98,21 @@ export default function Navbar({ rightContent }: NavbarProps) {
               </Link>
             </div>
 
-            {/* Mobile hamburger — hidden on desktop via .navbar-burger { display:none } default,
-                shown below 780px alongside the hidden .navbar-links (see globals.css). */}
+            <Link className="navbar-mobile-buy" href="/checkout" onClick={() => setOpen(false)} style={{display:'none',alignItems:'center',justifyContent:'center',minHeight:44,padding:'10px 14px',borderRadius:10,background:C.primary,color:'#fff',fontSize:14,fontWeight:800,whiteSpace:'nowrap'}}>
+              اشتري الآن
+            </Link>
+
+            {/* Mobile actions remain visible without opening the menu. */}
             <button
+              id="mobile-menu-toggle"
               className="navbar-burger"
               onClick={() => setOpen(o => !o)}
               aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
               aria-expanded={open}
+              aria-controls="mobile-navigation"
               style={{
                 display: 'none', alignItems: 'center', justifyContent: 'center',
-                width: 40, height: 40, borderRadius: 9,
+                width: 44, height: 44, borderRadius: 9,
                 background: open ? C.primaryLight : 'transparent',
                 border: `1px solid ${open ? C.border2 : C.border}`,
                 color: C.text1, cursor: 'pointer',
@@ -116,15 +131,15 @@ export default function Navbar({ rightContent }: NavbarProps) {
         panel's top/bottom offsets resolved against nav's own 60px box
         instead of the viewport and collapsed to 0 height. */}
     {!rightContent && open && (
-      <div className="navbar-mobile-panel">
+      <div id="mobile-navigation" className="navbar-mobile-panel" aria-label="قائمة التنقل">
         <div style={{ display: 'flex', flexDirection: 'column', padding: '18px 20px', gap: 4 }}>
           {NAV_LINKS.map(link => (
-            <Link key={link.href} href={link.href} onClick={() => setOpen(false)} style={{
+            <a key={link.href} href={link.href} onClick={() => setOpen(false)} style={{
               fontSize: 15, fontWeight: 700, color: C.text1, textDecoration: 'none',
               padding: '13px 14px', borderRadius: 10, borderBottom: `1px solid ${C.border}`,
             }}>
               {link.label}
-            </Link>
+            </a>
           ))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
             <Link href="/login" onClick={() => setOpen(false)} style={{

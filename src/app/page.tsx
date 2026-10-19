@@ -40,9 +40,10 @@ const ICON_MAP: Record<string, typeof IconStarFilled> = {
 }
 
 export default async function HomePage() {
-  const [settings, testimonials, faqs, features, languages] = await Promise.all([
-    getStoreSettings(), getTestimonials(), getFaqs(), getFeatures(), getBookLanguages(),
+  const [settings, faqs, features, languages] = await Promise.all([
+    getStoreSettings(), getFaqs(), getFeatures(), getBookLanguages(),
   ])
+  const testimonials = settings.testimonials_visible ? await getTestimonials() : []
 
   const hero = splitHighlight(settings.hero_title)
 
@@ -81,30 +82,31 @@ export default async function HomePage() {
       <section className="hero-grid" style={{maxWidth:1240,margin:'0 auto',padding:'clamp(96px,16vw,140px) clamp(20px,6vw,40px) clamp(56px,9vw,80px)',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'clamp(36px,6vw,72px)',alignItems:'center'}}>
         {/* RIGHT (desktop, RTL) / FIRST (mobile) — copy */}
         <div className="hero-text-col" style={{minWidth:0}}>
-          <div style={{display:'inline-flex',alignItems:'center',gap:6,background:PL,color:PT,fontSize:12,fontWeight:700,padding:'5px 14px',borderRadius:999,border:`0.5px solid ${BR}`,marginBottom:22}}>
+          <div className="hero-badge" style={{display:'inline-flex',alignItems:'center',gap:6,background:PL,color:PT,fontSize:12,fontWeight:700,padding:'5px 14px',borderRadius:999,border:`0.5px solid ${BR}`,marginBottom:22}}>
             <div style={{width:7,height:7,borderRadius:'50%',background:'#36DB9C'}} />
             {settings.hero_badge}
           </div>
           <h1 style={{fontSize:'clamp(30px,5.2vw,46px)',fontWeight:900,lineHeight:1.15,marginBottom:18,color:T1}}>
             {hero.pre}{hero.highlight && <span style={{color:P}}>{hero.highlight}</span>}{hero.post}
           </h1>
-          <p style={{fontSize:16,color:T2,lineHeight:1.75,marginBottom:32,maxWidth:460}}>
+          <p className="hero-description" style={{fontSize:16,color:T2,lineHeight:1.75,marginBottom:24,maxWidth:460}}>
             {settings.hero_subtitle}
           </p>
+          <p className="hero-product-summary" style={{fontSize:14,color:T2,lineHeight:1.8,marginBottom:18}}>دليل PDF · نسخة بلغة تختارينها · {settings.product_price} د.ك · تحميل بعد تأكيد الدفع</p>
           <div className="hero-cta-row" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:12,marginBottom:20}}>
             <Link href="/checkout" style={{background:P,color:'#fff',display:'inline-flex',alignItems:'center',gap:8,fontSize:'clamp(15px,3vw,18px)',fontWeight:900,padding:'17px clamp(24px,5vw,32px)',borderRadius:16,textDecoration:'none',boxShadow:'0 4px 20px rgba(103,71,178,.35)'}}>
               {settings.hero_cta_text} — {settings.product_price} د.ك
             </Link>
-            <Link href="#features" style={{color:P,display:'inline-flex',alignItems:'center',gap:6,fontSize:14,fontWeight:800,padding:'12px 6px',textDecoration:'none'}}>
+            <a href="#content" style={{color:P,display:'inline-flex',alignItems:'center',gap:6,fontSize:14,fontWeight:800,padding:'12px 6px',textDecoration:'none'}}>
               شاهدي ماذا بالداخل ←
-            </Link>
+            </a>
           </div>
           <div className="hero-price-row" style={{display:'flex',alignItems:'baseline',gap:8,marginBottom:18}}>
             <span style={{fontSize:15,color:T3,textDecoration:'line-through'}}>{settings.product_original_price} د.ك</span>
             <span style={{fontSize:18,fontWeight:900,color:P}}>{settings.product_price} د.ك</span>
             <span style={{fontSize:12,fontWeight:700,color:'#0F6E56',background:'#E1F5EE',padding:'3px 10px',borderRadius:999}}>عرض الإطلاق</span>
           </div>
-          <div className="hero-trust-row" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:'8px 20px',fontSize:12,color:T3}}>
+          <div className="hero-trust-row" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:'8px 20px',fontSize:14,color:T3}}>
             <span style={{display:'inline-flex',alignItems:'center',gap:6}}><IconLockLine /> دفع عبر بوابة مشفّرة</span>
             <span style={{display:'inline-flex',alignItems:'center',gap:6}}><IconBolt size={14} /> تحميل فوري بعد الدفع</span>
             <span style={{display:'inline-flex',alignItems:'center',gap:6}}><IconShieldCheck size={14} /> بيانات البطاقة لدى بوابة الدفع</span>
@@ -181,7 +183,7 @@ export default async function HomePage() {
         <div style={{fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:8}}>الحل</div>
         <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:8}}>رَوْنَق — النظام الذي كنتِ تبحثين عنه</h2>
         <p style={{fontSize:15,color:T2,marginBottom:32}}>خطوات عملية وقوائم وجداول تساعدك على تنظيم التدريب والمتابعة.</p>
-        <div id="content" className="feature-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,240px),1fr))',gap:14,scrollMarginTop:96}}>
+        <div className="feature-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,240px),1fr))',gap:14}}>
           {features.map((f)=>{
             const Icon = ICON_MAP[f.icon] ?? IconCircleCheck
             return (
@@ -252,7 +254,8 @@ export default async function HomePage() {
       )}
 
       {/* ── CONTENTS ── */}
-      <section id="compare" style={{background:'#FAFAFA',borderBottom:`1px solid ${BR}`}}>
+      <section id="content" style={{background:'#FAFAFA',borderBottom:`1px solid ${BR}`}}>
+        <span id="compare" aria-hidden="true" />
         <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
           <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:12}}>شنو يشمل دليل رَوْنَق؟</h2>
           <p style={{color:T2,lineHeight:1.8,marginBottom:24}}>مرجع ترجعين له وقت التدريب والمتابعة، على الجهاز أو مطبوع داخل المنزل.</p>
