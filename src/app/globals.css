@@ -265,6 +265,7 @@ table { max-width: 100%; }
 .newsletter-input-row button, .newsletter-confirm-button { min-height: 48px; flex-shrink: 0; padding: 12px 18px; background: #6747B2; color: white; border: 1px solid #A98BDE; border-radius: 10px; font: inherit; font-weight: 800; cursor: pointer; }
 .newsletter-input-row button:disabled, .newsletter-confirm-button:disabled { opacity: .65; cursor: wait; }
 .newsletter-signup a { font-size: 14px; color: #F0EAF9; text-underline-offset: 4px; }
+.newsletter-signup form > a { display: inline-flex; align-items: center; min-height: 44px; margin-top: 10px; padding: 4px 0; }
 .newsletter-signup [role="alert"] { color: #FFD3D3; margin-top: 12px; }
 .newsletter-honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .newsletter-confirm-page { max-width: 620px; margin: 80px auto; padding: 32px 24px; color: #352D42; line-height: 1.9; }
@@ -284,7 +285,7 @@ table { max-width: 100%; }
 .guide-sample-page { padding: clamp(22px, 5vw, 42px); background: #F9F6FD; color: #352D42; line-height: 1.9; font-size: 16px; }
 .sample-page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #6747B2; padding-bottom: 18px; margin-bottom: 24px; border-bottom: 1px solid #E5DDF0; }
 .sample-page-header > span:last-child { font-size: 12px; }
-.guide-sample-page h4 { font-size: clamp(21px, 4vw, 28px); font-weight: 900; color: #6747B2; margin: 22px 0 12px; line-height: 1.5; }
+.guide-sample-page h3 { font-size: clamp(21px, 4vw, 28px); font-weight: 900; color: #6747B2; margin: 22px 0 12px; line-height: 1.5; }
 .guide-sample-page p { margin-bottom: 16px; }
 .sample-cloth-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 15px; }
 .sample-cloth-table th, .sample-cloth-table td { padding: 10px; background: white; border-block: 1px solid #E8E2F0; text-align: right; }
@@ -299,7 +300,7 @@ table { max-width: 100%; }
 .sample-respect-list { padding-right: 22px; }
 .sample-respect-list li { margin-bottom: 12px; }
 .preview-card-details { padding: 22px; }
-.preview-card-details h4 { font-size: 18px; color: #352D42; margin-bottom: 8px; }
+.preview-card-details h3 { font-size: 18px; color: #352D42; margin-bottom: 8px; }
 .preview-zoom { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 48px; padding: 12px 14px; margin-top: 18px; border: 1px solid #6747B2; border-radius: 12px; background: white; color: #6747B2; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
 .preview-zoom:hover { background: #F2EDF9; }
 .preview-zoom:focus-visible, .preview-dialog-bar button:focus-visible { outline: 3px solid #6747B2; outline-offset: 3px; }
