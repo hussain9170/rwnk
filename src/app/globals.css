@@ -16,7 +16,7 @@
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-#features, #content, #compare, #steps, #pricing, #faq { scroll-margin-top: 88px; }
+#features, #content, #compare, #steps, #pricing, #faq, #preview-heading { scroll-margin-top: 88px; }
 html, body { max-width: 100%; overflow-x: hidden; }
 /* Tajawal is self-hosted via next/font/google (see src/lib/font.ts) and
    exposed as --font-tajawal on <html>. Real system fonts with proper
@@ -252,7 +252,7 @@ table { max-width: 100%; }
 
 /* Guide excerpts are live text, so they stay sharp when enlarged. */
 .policy-consent { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; margin-bottom: 12px; color: #4A4060; font-size: 14px; line-height: 1.9; }
-.policy-consent input, .newsletter-choice input { flex-shrink: 0; width: 20px; height: 20px; margin-top: 3px; accent-color: #6747B2; cursor: pointer; }
+.policy-consent input { flex-shrink: 0; width: 20px; height: 20px; margin-top: 3px; accent-color: #6747B2; cursor: pointer; }
 .policy-consent label { cursor: pointer; }
 .policy-consent a { color: #6747B2; text-decoration: underline; text-underline-offset: 3px; }
 .consent-error { font-size: 14px; line-height: 1.8; color: #A32D2D; margin-bottom: 12px; }
@@ -264,7 +264,6 @@ table { max-width: 100%; }
 .newsletter-input-row input { width: 100%; min-width: 0; min-height: 48px; border: 1px solid #DDD3EC; background: white; color: #352D42; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 16px; }
 .newsletter-input-row button, .newsletter-confirm-button { min-height: 48px; flex-shrink: 0; padding: 12px 18px; background: #6747B2; color: white; border: 1px solid #A98BDE; border-radius: 10px; font: inherit; font-weight: 800; cursor: pointer; }
 .newsletter-input-row button:disabled, .newsletter-confirm-button:disabled { opacity: .65; cursor: wait; }
-.newsletter-choice { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.9; margin: 14px 0 8px; cursor: pointer; }
 .newsletter-signup a { font-size: 14px; color: #F0EAF9; text-underline-offset: 4px; }
 .newsletter-signup [role="alert"] { color: #FFD3D3; margin-top: 12px; }
 .newsletter-honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
@@ -276,7 +275,7 @@ table { max-width: 100%; }
 @media (max-width: 640px) { .newsletter-signup { grid-template-columns: 1fr; padding: 28px 20px; gap: 20px; } .newsletter-input-row { flex-direction: column; } }
 .guide-previews { margin-top: 40px; }
 .preview-section-label { color: #6747B2; font-weight: 800; font-size: 14px; margin-bottom: 8px; }
-.guide-previews h3 { font-size: clamp(21px, 4vw, 26px); margin-bottom: 10px; }
+.guide-previews > h2 { font-size: clamp(21px, 4vw, 26px); margin-bottom: 10px; }
 .preview-intro, .preview-card-details > p { color: #5D566B; font-size: 15px; line-height: 1.8; }
 .guide-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 24px; }
 .guide-preview-card { min-width: 0; border: 1px solid #E8E2F0; border-radius: 20px; overflow: hidden; background: white; }

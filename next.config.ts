@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
     return [
+      { source: '/:asset(logo-icon.png|rwnq-icon.png|rwnak-guide-cover-ar.webp|rwnak-guide-preview.png)', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
       { source: '/:path*', headers: [
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'X-Frame-Options', value: 'DENY' },
@@ -30,8 +31,6 @@ const nextConfig: NextConfig = {
       { source: '/success', headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'Referrer-Policy', value: 'no-referrer' }] },
     ]
   },
-  // A lockfile in a parent folder (outside this repo) made Next guess the
-  // wrong workspace root. Pin it explicitly to this project.
   // A lockfile in a parent folder (outside this repo) made Next guess the
   // wrong workspace root. Pin it explicitly to this project.
   turbopack: {

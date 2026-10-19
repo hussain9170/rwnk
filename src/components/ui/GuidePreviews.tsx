@@ -47,7 +47,7 @@ const previews = [
 export function GuidePreviews() {
   return <section className="guide-previews" aria-labelledby="preview-heading">
     <div className="preview-section-label">من داخل الدليل</div>
-    <h3 id="preview-heading">شوفي طريقة الشرح قبل الشراء</h3>
+    <h2 id="preview-heading">شوفي طريقة الشرح قبل الشراء</h2>
     <p className="preview-intro">مقتطفان من النسخة العربية، أعدنا تنسيقهم للقراءة على الجوال. تقدرين تكبّرين كل معاينة.</p>
     <div className="guide-preview-grid">{previews.map(({ title, description, Page }) => <article className="guide-preview-card" key={title}>
       <div className="sample-thumbnail"><Page /></div>

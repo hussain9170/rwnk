@@ -4,8 +4,7 @@ import type { Metadata } from 'next'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import {
-  IconShieldCheck, IconBolt, IconStarFilled, IconX, IconRefresh,
-  IconMoodSad, IconClockOff, IconCheck, IconCircleCheck,
+  IconShieldCheck, IconBolt, IconStarFilled, IconCheck, IconCircleCheck,
   IconBook2, IconCalendar, IconPhoto, IconLayoutGrid,
 } from '@tabler/icons-react'
 import { getStoreSettings, splitHighlight } from '@/lib/store-settings'
@@ -46,7 +45,7 @@ export default async function HomePage() {
   ])
   const testimonials = settings.testimonials_visible ? await getTestimonials() : []
 
-  const hero = splitHighlight(settings.hero_title)
+  const hero = splitHighlight(settings.hero_title.replace('منزلك يستحق *مستوى* الفنادق الراقية', 'دليل عملي لتدريب العاملة و*تنظيم البيت*'))
 
   const productJsonLd = {
     '@context': 'https://schema.org',
@@ -93,13 +92,13 @@ export default async function HomePage() {
           <p className="hero-description" style={{fontSize:16,color:T2,lineHeight:1.75,marginBottom:24,maxWidth:460}}>
             {settings.hero_subtitle}
           </p>
-          <p className="hero-product-summary" style={{fontSize:14,color:T2,lineHeight:1.8,marginBottom:18}}>دليل PDF · نسخة بلغة تختارينها · {settings.product_price} د.ك · تحميل بعد تأكيد الدفع</p>
+          <p className="hero-product-summary" style={{fontSize:15,color:T2,lineHeight:1.8,marginBottom:18}}>66 مهمة بخطوات واضحة · PDF · لغة واحدة تختارينها · {settings.product_price} د.ك</p>
           <div className="hero-cta-row" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:12,marginBottom:20}}>
             <Link href="/checkout" style={{background:P,color:'#fff',display:'inline-flex',alignItems:'center',gap:8,fontSize:'clamp(15px,3vw,18px)',fontWeight:900,padding:'17px clamp(24px,5vw,32px)',borderRadius:16,textDecoration:'none',boxShadow:'0 4px 20px rgba(103,71,178,.35)'}}>
               {settings.hero_cta_text} — {settings.product_price} د.ك
             </Link>
-            <a href="#content" style={{color:P,display:'inline-flex',alignItems:'center',gap:6,fontSize:14,fontWeight:800,padding:'12px 6px',textDecoration:'none'}}>
-              شاهدي ماذا بالداخل ←
+            <a href="#preview-heading" style={{color:P,display:'inline-flex',alignItems:'center',gap:6,fontSize:14,fontWeight:800,padding:'12px 6px',textDecoration:'none'}}>
+              شوفي صفحات من الدليل ←
             </a>
           </div>
           <div className="hero-price-row" style={{display:'flex',alignItems:'baseline',gap:8,marginBottom:18}}>
@@ -150,41 +149,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── PROBLEM ── */}
-      <div style={{background:'#fff',borderBottom:`1px solid ${BR}`}}>
-        <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
-          <div style={{fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:8}}>المشكلة</div>
-          <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:8}}>تتكرر هالمواقف في بيتك؟</h2>
-          <p style={{fontSize:15,color:T2,marginBottom:32}}>تعليمات كثيرة، ومتابعة يومية تحتاج إلى وقت وجهد.</p>
-          <div className="grid-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-            {[
-              {Icon:IconX,       title:'تنظيف بلا معيار',    desc:'المنزل يبدو نظيفاً لكن بعض التفاصيل تحتاج إلى متابعة'},
-              {Icon:IconRefresh, title:'شرح لا ينتهي',        desc:'تكررين التعليمات نفسها وتحتاجين إلى مرجع واضح'},
-              {Icon:IconMoodSad, title:'نتائج غير متسقة',      desc:'أحياناً ممتاز، أحياناً مقبول — بدون سبب واضح'},
-              {Icon:IconClockOff,title:'وقت ضائع',             desc:'تقضين وقتك في المتابعة اليومية بدل الراحة'},
-            ].map(({Icon,title,desc},i)=>(
-              <div key={i} style={{background:'#FAFAFA',border:`0.5px solid ${BR}`,borderRadius:16,padding:22,display:'flex',gap:14,alignItems:'flex-start'}}>
-                <div style={{width:38,height:38,minWidth:38,borderRadius:10,background:'#FEF2F2',border:'0.5px solid #FECACA',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <Icon size={18} color="#E24B4A" />
-                </div>
-                <div>
-                  <div style={{fontSize:14,fontWeight:900,marginBottom:4}}>{title}</div>
-                  <div style={{fontSize:13,color:T2,lineHeight:1.6}}>{desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{background:P,color:'#fff',textAlign:'center',padding:18,fontSize:15,fontWeight:900,borderRadius:16,marginTop:20}}>
-            روتين واضح يساعدك على توحيد المهام ومتابعتها
-          </div>
-        </div>
+      <div style={{maxWidth:1000,margin:'0 auto',padding:'0 clamp(20px,6vw,40px) 32px'}}>
+        <GuidePreviews />
       </div>
 
       {/* ── SOLUTION ── */}
-      <div id="features" style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
-        <div style={{fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:8}}>الحل</div>
-        <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:8}}>رَوْنَق — النظام الذي كنتِ تبحثين عنه</h2>
-        <p style={{fontSize:15,color:T2,marginBottom:32}}>خطوات عملية وقوائم وجداول تساعدك على تنظيم التدريب والمتابعة.</p>
+      <div id="features" style={{maxWidth:900,margin:'0 auto',padding:'32px clamp(20px,6vw,40px)'}}>
+        <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:24}}>شلون يساعدج الدليل؟</h2>
         <div className="feature-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,240px),1fr))',gap:14}}>
           {features.map((f)=>{
             const Icon = ICON_MAP[f.icon] ?? IconCircleCheck
@@ -269,7 +240,6 @@ export default async function HomePage() {
               ['نسخة رقمية', 'ملف PDF باللغة المختارة، للاستخدام المنزلي.'],
             ].map(([title,description])=><div key={title} style={{padding:'18px 0',borderBottom:`1px solid ${BR}`}}><dt style={{fontWeight:900,color:P,marginBottom:6}}>{title}</dt><dd style={{color:T2,fontSize:14,lineHeight:1.8}}>{description}</dd></div>)}
           </dl>
-          <GuidePreviews />
           <div style={{marginTop:28}}>
             <h3 style={{fontSize:19,marginBottom:12}}>اختاري اللغة المناسبة للعاملة</h3>
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{languages.map(language=><span key={language.language_code} style={{background:PL,color:PT,padding:'7px 14px',borderRadius:999,fontSize:14,fontWeight:700}}>{language.name_ar}</span>)}</div>

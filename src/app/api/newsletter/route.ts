@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     if (body.website) return NextResponse.json({ ok: true })
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
-    if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) || email.length > 254 || body.consent !== true) return NextResponse.json({ error: 'أدخلي بريد صحيح ووافقي على الاشتراك.' }, { status: 400 })
+    if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) || email.length > 254 || body.consent !== true) return NextResponse.json({ error: 'أدخلي بريد إلكتروني صحيح واطلبي الاشتراك من الزر.' }, { status: 400 })
     await requestNewsletter(email)
     return NextResponse.json({ ok: true })
   } catch {
