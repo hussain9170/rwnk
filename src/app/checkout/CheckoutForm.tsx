@@ -44,7 +44,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
 
   const focus=(e:React.FocusEvent<HTMLInputElement>)=>{e.target.style.borderColor=P;e.target.style.boxShadow='0 0 0 3px rgba(103,71,178,.1)'}
   const blur=(e:React.FocusEvent<HTMLInputElement>)=>{e.target.style.borderColor=BR;e.target.style.boxShadow='none'}
-  const inp:React.CSSProperties={width:'100%',height:42,background:'#FAFAFA',border:`1px solid ${BR}`,borderRadius:10,padding:'0 12px',fontSize:13,color:T1,outline:'none',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",transition:'all .2s'}
+  const inp:React.CSSProperties={width:'100%',height:48,background:'#FAFAFA',border:`1px solid ${BR}`,borderRadius:10,padding:'0 12px',fontSize:16,color:T1,outline:'none',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",transition:'all .2s'}
 
   async function handlePay(){
     if (submitting.current || loading) return
@@ -87,7 +87,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
   const priceLabel = `${price} د.ك`
 
   return (
-    <main className="checkout-shell" style={{width:'100%',minHeight:'100vh',display:'grid',gridTemplateColumns:'1fr 400px',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl',background:'#fff'}}>
+    <main className="checkout-shell" style={{width:'100%',maxWidth:1120,margin:'0 auto',minHeight:'100vh',display:'grid',gridTemplateColumns:'minmax(0,1fr) 350px',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl',background:'#fff'}}>
       <div className="checkout-col-main" style={{overflowY:'auto',padding:'clamp(20px,5vw,32px) clamp(16px,5vw,40px)',backgroundImage:'radial-gradient(circle,rgba(103,71,178,0.04) 1px,transparent 1px)',backgroundSize:'28px 28px'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:28,flexWrap:'wrap',gap:8}}>
           <Link href="/" aria-label="رَوْنَق — الرئيسية" style={{display:'flex',alignItems:'center',color:T1,textDecoration:'none'}}>
@@ -129,14 +129,14 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
           <input id="checkout-email" type="email" placeholder="example@email.com" dir="ltr" autoComplete="email" required
             value={email} onChange={e=>{setEmail(e.target.value); if(error) setError('')}} onFocus={focus} onBlur={blur}
             aria-invalid={!!error} aria-describedby={error?'checkout-email-error':undefined}
-            style={{...inp,height:48,fontSize:14}}/>
+            style={inp}/>
           <p style={{fontSize:12,color:T3,marginTop:6}}>سيُرسل الكتاب لهذا البريد · سيُنشأ حسابك تلقائياً بعد الدفع</p>
           {error && <p id="checkout-email-error" role="alert" style={{fontSize:12,color:'#A32D2D',marginTop:8,padding:'8px 12px',background:'#FEF2F2',borderRadius:8}}>{error}</p>}
 
           <label htmlFor="checkout-name" style={{display:'block',fontSize:12,fontWeight:900,color:P,textTransform:'uppercase',margin:'16px 0 14px'}}>الاسم <span style={{fontWeight:400,color:T3,textTransform:'none'}}>(اختياري)</span></label>
           <input id="checkout-name" type="text" placeholder="اسمك الكامل" autoComplete="name"
             value={customerName} onChange={e=>setCustomerName(e.target.value)} onFocus={focus} onBlur={blur}
-            style={{...inp,height:48,fontSize:14}}/>
+            style={inp}/>
         </div>
 
         <div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:16,padding:20}}>
@@ -144,7 +144,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
           <div className="checkout-pm-grid" aria-label="وسائل الدفع المتاحة لدى البوابة" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:16}}>
             {PM.map(m=>(
               <div key={m.id}
-                style={{minHeight:44,border:`1.5px solid ${BR}`,background:'#fff',borderRadius:10,padding:'10px 8px',textAlign:'center',cursor:'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif"}}>
+                style={{minHeight:44,border:`1.5px solid ${BR}`,background:'#fff',borderRadius:10,padding:'10px 8px',textAlign:'center',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif"}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:32,marginBottom:6,direction:'ltr'}}><m.Icon height={28} /></div>
                 <div style={{fontSize:12,fontWeight:700,color:T2}}>{m.label}</div>
               </div>
@@ -170,9 +170,10 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
                 {languages.find(l=>l.language_code===bookLanguage)?.name_ar ?? bookLanguage}
               </span>
             </div>
-            <div style={{fontSize:12,fontWeight:700,color:P,marginTop:3}}>⚡ تحميل فوري + {settings.downloads_limit} تحميلات</div>
+            <div style={{fontSize:14,fontWeight:700,color:P,marginTop:6}}>تحميل بعد تأكيد الدفع</div>
           </div>
         </div>
+        <p style={{fontSize:14,color:T2,lineHeight:1.8,marginBottom:18}}>تقدرين تحمّلين نفس ملف الدليل حتى {settings.downloads_limit} مرات إجمالاً، باللغة اللي اخترتيها. الطلب يشمل نسخة بلغة واحدة.</p>
         <div style={{borderTop:`1px solid ${BR}`,paddingTop:14,marginBottom:14}}>
           <div style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:9}}>
             <span style={{color:T3}}>سعر الكتاب</span>

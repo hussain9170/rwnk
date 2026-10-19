@@ -4,11 +4,11 @@ import { BrandLogo } from '@/components/ui/BrandLogo'
 import { C } from '@/lib/theme'
 import { DEFAULT_SETTINGS, type StoreSettings } from '@/lib/store-settings'
 import {
-  IconBrandInstagram, IconBrandTwitter,
+  IconBrandInstagram, IconBrandTwitter, IconBrandSnapchat,
   IconShieldCheck, IconBolt,
 } from '@tabler/icons-react'
 
-function buildLinks(S: StoreSettings) {
+function buildLinks() {
   return {
     'المنتج': [
       { label: 'المميزات',         href: '/#features'  },
@@ -34,6 +34,7 @@ function buildLinks(S: StoreSettings) {
 function buildSocial(S: StoreSettings) {
   return [
     { icon: IconBrandInstagram, href: `https://instagram.com/${S.instagram.replace('@','')}`, label: 'انستغرام' },
+    { icon: IconBrandSnapchat, href: 'https://www.snapchat.com/add/rwnak.official', label: 'سناب شات' },
     { icon: IconBrandTwitter,   href: `https://twitter.com/${S.twitter.replace('@','')}`,    label: 'تويتر'    },
   ]
 }
@@ -45,7 +46,7 @@ const TRUST = [
 
 export default function Footer({ settings, showCta = true }: { settings?: StoreSettings; showCta?: boolean }) {
   const S = settings ?? DEFAULT_SETTINGS
-  const LINKS = buildLinks(S)
+  const LINKS = buildLinks()
   const SOCIAL = buildSocial(S)
 
   return (
@@ -91,8 +92,8 @@ export default function Footer({ settings, showCta = true }: { settings?: StoreS
             {/* Social icons */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
               {SOCIAL.map(({ icon: Icon, href, label }) => (
-                <Link key={label} href={href} title={label} aria-label={label} style={{
-                  width: 34, height: 34, borderRadius: 8,
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" title={label} aria-label={`${label} — يفتح في نافذة جديدة`} style={{
+                  width: 44, height: 44, borderRadius: 8,
                   background: 'rgba(255,255,255,0.06)',
                   border: '1px solid rgba(255,255,255,0.1)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -101,8 +102,8 @@ export default function Footer({ settings, showCta = true }: { settings?: StoreS
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)' }}
                 >
-                  <Icon size={16} />
-                </Link>
+                  <Icon size={20} />
+                </a>
               ))}
             </div>
 
