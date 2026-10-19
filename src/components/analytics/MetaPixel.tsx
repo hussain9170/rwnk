@@ -24,7 +24,7 @@ declare global {
 function isPublicPixelUrl(raw: string) {
   if (!raw) return true
   const url = new URL(raw, window.location.origin)
-  if (/^\/(auth|login|register|reset-password|account|library|admin|success|api)(\/|$)/.test(url.pathname)) return false
+  if (/^\/(newsletter|auth|login|register|reset-password|account|library|admin|success|api)(\/|$)/.test(url.pathname)) return false
   if (url.hash) return false
   return Array.from(url.searchParams.keys()).every(key => ANALYTICS_QUERY_KEYS.includes(key))
 }

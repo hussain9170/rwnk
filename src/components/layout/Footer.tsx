@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { BrandLogo } from '@/components/ui/BrandLogo'
+import { NewsletterSignup } from '@/components/ui/NewsletterSignup'
 import { C } from '@/lib/theme'
 import { DEFAULT_SETTINGS, type StoreSettings } from '@/lib/store-settings'
 import {
@@ -71,6 +72,7 @@ export default function Footer({ settings, showCta = true }: { settings?: StoreS
 
       }
 
+      <NewsletterSignup />
       {/* Links grid */}
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: 'clamp(32px,7vw,48px) clamp(20px,6vw,40px)' }}>
         <div className="grid-4" style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40 }}>

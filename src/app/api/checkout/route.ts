@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerEnv } from '@/lib/env'
 import { insertWithSchemaFallback, getSingletonRow } from '@/lib/db-resilience'
 import { SNAP_CONSENT_COOKIE, parseSnapConsent } from '@/lib/snap-consent'
+import { POLICY_VERSION } from '@/lib/policy-consent'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +47,9 @@ export async function POST(request: NextRequest) {
   }
 
   const email = typeof body?.email === 'string' ? body.email.trim() : ''
+  if (body?.policyAccepted !== true || body?.policyVersion !== POLICY_VERSION) {
+    return NextResponse.json({ error: 'يرجى الموافقة على الشروط وسياسة الاسترجاع والاطّلاع على الخصوصية قبل الشراء.' }, { status: 400 })
+  }
   const customerName = typeof body?.customerName === 'string' ? body.customerName.trim().slice(0, 200) : ''
   const paymentMethod = VALID_METHODS.has(body?.paymentMethod) ? body.paymentMethod : 'card'
   const requestedLanguage = typeof body?.bookLanguage === 'string' ? body.bookLanguage.trim().toLowerCase().slice(0, 10) : ''
@@ -90,6 +94,8 @@ export async function POST(request: NextRequest) {
     status:         'pending',
     payment_method: paymentMethod,
     book_language:  bookLanguage,
+    policy_version: POLICY_VERSION,
+    policy_accepted_at: new Date().toISOString(),
   }
   if (customerName) purchasePayload.customer_name = customerName
 
@@ -107,6 +113,9 @@ export async function POST(request: NextRequest) {
   const { data: purchase, error: insertErr, droppedFields } = await insertWithSchemaFallback<{ id: string; amount: number; currency: string }>(sb, 'purchases', purchasePayload)
   if (droppedFields.length > 0) {
     console.error(`[checkout] purchases columns not found — dropped from insert: ${droppedFields.join(', ')}. The migration in supabase/schema.sql has not been fully run against this database. RUN THE MIGRATION.`)
+  }
+  if (droppedFields.includes('policy_version') || droppedFields.includes('policy_accepted_at')) {
+    return NextResponse.json({ error: 'تعذّر حفظ الموافقة. حاولي لاحقاً.' }, { status: 503 })
   }
 
   if (insertErr || !purchase) {

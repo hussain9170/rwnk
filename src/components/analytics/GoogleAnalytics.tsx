@@ -18,6 +18,7 @@ function PageViewTracker() {
   const lastPage = useRef<string | null>(null)
 
   useEffect(() => {
+    if (pathname.startsWith('/newsletter')) return
     const query = searchParams.toString()
     const url = query ? `${pathname}?${query}` : pathname
     if (lastPage.current === url) return
@@ -29,7 +30,8 @@ function PageViewTracker() {
 }
 
 export default function GoogleAnalytics() {
-  if (!GA_MEASUREMENT_ID) return null
+  const pathname = usePathname()
+  if (!GA_MEASUREMENT_ID || pathname.startsWith('/newsletter')) return null
 
   return (
     <>
