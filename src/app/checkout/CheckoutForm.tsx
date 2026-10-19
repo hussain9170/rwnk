@@ -150,7 +150,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
               </div>
             ))}
           </div>
-          <p style={{fontSize:14,color:T2,lineHeight:1.8}}>اختاري وسيلة الدفع في الخطوة التالية داخل بوابة الدفع؛ توفر Apple Pay يعتمد على جهازك وإعدادات البوابة.</p>
+          <p style={{fontSize:14,color:T2,lineHeight:1.8}}>اختاري وسيلة الدفع في الخطوة التالية داخل بوابة الدفع.</p>
           <div style={{display:'flex',alignItems:'center',gap:10,padding:'14px 4px',fontSize:12,color:T3,lineHeight:1.6}}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={T3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             سيتم تحويلك إلى صفحة دفع آمنة تابعة لبوابة الدفع لإدخال بيانات البطاقة — لا نقوم بتخزين بيانات بطاقتك على موقعنا.
