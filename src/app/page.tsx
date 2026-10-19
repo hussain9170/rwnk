@@ -11,6 +11,7 @@ import {
 import { getStoreSettings, splitHighlight } from '@/lib/store-settings'
 import { getTestimonials, getFaqs, getFeatures, getBookLanguages } from '@/lib/content'
 import { GuideArtwork } from '@/components/ui/GuideArtwork'
+import { GuidePreviews } from '@/components/ui/GuidePreviews'
 import { SITE_URL, publicMetadata, jsonLd } from '@/lib/seo'
 import { GUIDES } from '@/lib/guides'
 
@@ -268,6 +269,7 @@ export default async function HomePage() {
               ['نسخة رقمية', 'ملف PDF باللغة المختارة، للاستخدام المنزلي.'],
             ].map(([title,description])=><div key={title} style={{padding:'18px 0',borderBottom:`1px solid ${BR}`}}><dt style={{fontWeight:900,color:P,marginBottom:6}}>{title}</dt><dd style={{color:T2,fontSize:14,lineHeight:1.8}}>{description}</dd></div>)}
           </dl>
+          <GuidePreviews />
           <div style={{marginTop:28}}>
             <h3 style={{fontSize:19,marginBottom:12}}>اختاري اللغة المناسبة للعاملة</h3>
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{languages.map(language=><span key={language.language_code} style={{background:PL,color:PT,padding:'7px 14px',borderRadius:999,fontSize:14,fontWeight:700}}>{language.name_ar}</span>)}</div>
