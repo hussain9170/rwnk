@@ -1002,3 +1002,38 @@ REVOKE EXECUTE ON FUNCTION public.apply_discount_code(text, numeric) FROM PUBLIC
 GRANT EXECUTE ON FUNCTION public.get_purchase_by_email(text, uuid), public.apply_discount_code(text, numeric) TO service_role;
 ALTER FUNCTION public.get_purchase_by_email(text, uuid) SECURITY INVOKER;
 ALTER FUNCTION public.apply_discount_code(text, numeric) SECURITY INVOKER;
+
+-- §25: Explicit policy acknowledgement and verified newsletter capture (2026-10-19).
+-- Do not backfill historical customers or import purchase emails into marketing.
+alter table public.purchases add column if not exists policy_version text;
+alter table public.purchases add column if not exists policy_accepted_at timestamptz;
+create table if not exists public.policy_consents (
+  id uuid primary key default gen_random_uuid(),
+  email text,
+  source text not null check (source in ('register','google_register')),
+  policy_version text not null,
+  accepted_at timestamptz not null default now(),
+  user_id uuid,
+  verified_at timestamptz
+);
+alter table public.policy_consents enable row level security;
+revoke all on public.policy_consents from public, anon, authenticated;
+grant select, insert, update on public.policy_consents to service_role;
+create table if not exists public.newsletter_signups (
+  id uuid primary key default gen_random_uuid(),
+  email text not null check (length(email) <= 254),
+  token_hash text not null unique,
+  status text not null default 'pending' check (status in ('pending','confirming','confirmed','send_failed')),
+  consent_version text not null,
+  consent_text text not null,
+  source text not null,
+  requested_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  confirmed_at timestamptz
+);
+alter table public.newsletter_signups enable row level security;
+revoke all on public.newsletter_signups from public, anon, authenticated;
+grant select, insert, update on public.newsletter_signups to service_role;
+create index if not exists newsletter_signups_requested_at_idx on public.newsletter_signups (requested_at);
+
+alter table public.newsletter_signups add column if not exists confirmation_started_at timestamptz;

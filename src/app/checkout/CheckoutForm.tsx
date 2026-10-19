@@ -9,6 +9,8 @@ import type { BookLanguage } from '@/types'
 import { isValidEmail } from '@/lib/validation'
 import { trackViewItem, trackSelectLanguage, trackBeginCheckout, trackAddPaymentInfo } from '@/lib/gtag'
 import { hasSnapConsent } from '@/lib/snap-consent'
+import { PolicyConsent } from '@/components/ui/PolicyConsent'
+import { POLICY_VERSION } from '@/lib/policy-consent'
 
 const P='#6747B2',PL='#EDE8FF',T1='#1A1228',T2='#4A4060',T3='#6B617E',BR='#EDE8F5'
 const PM=[
@@ -31,6 +33,8 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
   const [loading,setLoading]=useState(false)
   const [error,setError]=useState('')
   const [banner,setBanner]=useState('')
+  const [policyAccepted,setPolicyAccepted]=useState(false)
+  const [policyError,setPolicyError]=useState('')
   const submitting = useRef(false)
 
   useEffect(() => {
@@ -52,6 +56,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
     if (!languages.some(l => l.language_code === bookLanguage)) { setBanner('لا توجد نسخة جاهزة للبيع حالياً. تواصلي معنا للمساعدة.'); return }
     if (!email) { setError('يرجى إدخال البريد الإلكتروني'); document.getElementById('checkout-email')?.focus(); return }
     if (!isValidEmail(email)) { setError('صيغة البريد الإلكتروني غير صحيحة'); document.getElementById('checkout-email')?.focus(); return }
+    if (!policyAccepted) { setPolicyError('وافقي على الشروط واطّلعي على الخصوصية قبل المتابعة.'); return }
 
     submitting.current = true
     setLoading(true); setError(''); setBanner('')
@@ -63,7 +68,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
     try {
       const checkoutRes = await fetch('/api/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, customerName, paymentMethod: pm, bookLanguage, expectedPrice: settings.product_price }),
+        body: JSON.stringify({ email, customerName, paymentMethod: pm, bookLanguage, expectedPrice: settings.product_price, policyAccepted, policyVersion: POLICY_VERSION }),
       })
       const checkoutJson = await checkoutRes.json()
       if (!checkoutRes.ok) throw new Error(checkoutJson.error ?? 'تعذّر إنشاء الطلب')
@@ -189,10 +194,11 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
           <span style={{fontSize:14,fontWeight:900,color:T1}}>الإجمالي</span>
           <span style={{fontSize:26,fontWeight:900,color:P,letterSpacing:-0.5}}>{price} <span style={{fontSize:13,fontWeight:400,color:T3,letterSpacing:'normal'}}>د.ك</span></span>
         </div>
+        <PolicyConsent checked={policyAccepted} onChange={value => { setPolicyAccepted(value); setPolicyError('') }} purchase />
+        {policyError ? <p role="alert" className="consent-error">{policyError}</p> : null}
         <button onClick={handlePay} disabled={loading || !languages.length} aria-busy={loading} style={{width:'100%',height:52,background:loading?'#8b6dd4':P,color:'#fff',border:'none',borderRadius:12,fontSize:15,fontWeight:900,cursor:loading?'wait':'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",boxShadow:'0 2px 12px rgba(103,71,178,.28)'}}>
           {loading?'جاري التحويل لبوابة الدفع...':`ادفعي الآن — ${priceLabel}`}
         </button>
-        <p style={{fontSize:13,color:T2,lineHeight:1.9,marginTop:16}}>راجعي <Link href="/terms" style={{color:P,textDecoration:'underline'}}>شروط الاستخدام</Link> و<Link href="/refund" style={{color:P,textDecoration:'underline'}}>سياسة الاسترجاع</Link> قبل الشراء. توضّح <Link href="/privacy" style={{color:P,textDecoration:'underline'}}>سياسة الخصوصية</Link> كيفية استخدام بياناتك.</p>
         <p style={{textAlign:'center',fontSize:12,color:T3,marginTop:12}}>للمساعدة: <a href={`mailto:${settings.email}`} dir="ltr" style={{color:P,textDecoration:'underline'}}>{settings.email}</a></p>
         <div style={{flex:1}}/>
         <Link href="/" style={{display:'block',textAlign:'center',fontSize:12,color:T3,marginTop:20,textDecoration:'none'}}>← العودة للرئيسية</Link>

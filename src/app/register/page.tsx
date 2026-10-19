@@ -3,12 +3,15 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { signUp, signInWithGoogle, isValidEmail, isValidPassword, mapAuthError, getCurrentUser } from '@/lib/auth'
+import { PolicyConsent } from '@/components/ui/PolicyConsent'
+import { POLICY_VERSION } from '@/lib/policy-consent'
 const P='#6747B2',T1='#1A1228',T2='#4A4060',T3='#9890AA',BR='#EDE8F5'
 export default function RegisterPage() {
   const [loading,setLoading]=useState(false)
   const [error,setError]=useState('')
   const [success,setSuccess]=useState('')
   const [checking,setChecking]=useState(true)
+  const [policyAccepted,setPolicyAccepted]=useState(false)
   const [form,setForm]=useState({firstName:'',lastName:'',email:'',phone:'',password:''})
   const set=(k:string)=>(e:React.ChangeEvent<HTMLInputElement>)=>setForm(f=>({...f,[k]:e.target.value}))
   const focus=(e:React.FocusEvent<HTMLInputElement>)=>{e.target.style.borderColor=P;e.target.style.boxShadow='0 0 0 3px rgba(103,71,178,.1)'}
@@ -36,14 +39,27 @@ export default function RegisterPage() {
     if(!form.email||!form.password||!form.firstName){setError('يرجى ملء الحقول المطلوبة');return}
     if(!isValidEmail(form.email)){setError('صيغة البريد الإلكتروني غير صحيحة');return}
     if(!isValidPassword(form.password)){setError('كلمة المرور 8 أحرف على الأقل');return}
+    if(!policyAccepted){setError('وافقي على الشروط واطّلعي على الخصوصية قبل التسجيل.');return}
     setLoading(true);setError('');setSuccess('')
     try{
+      await savePolicy('register')
       const data=await signUp(form.email,form.password,`${form.firstName} ${form.lastName}`.trim(),form.phone)
       if(data.session){window.location.href='/checkout'}
       else{setSuccess('تم إنشاء حسابك بنجاح! تحققي من بريدك الإلكتروني لتأكيد الحساب ثم سجّلي الدخول.')}
     }
     catch(err){setError(mapAuthError(err))}
     finally{setLoading(false)}
+  }
+  async function savePolicy(source: 'register' | 'google_register') {
+    const response = await fetch('/api/policy-consent', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ accepted:policyAccepted, version:POLICY_VERSION, source, email:source==='register'?form.email:undefined }) })
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error)
+  }
+  async function handleGoogle() {
+    if (!policyAccepted) { setError('وافقي على الشروط واطّلعي على الخصوصية قبل التسجيل.'); return }
+    setLoading(true); setError('')
+    try { await savePolicy('google_register'); await signInWithGoogle() }
+    catch { setError('تعذّر بدء التسجيل، حاولي مرة أخرى.'); setLoading(false) }
   }
   return (
     <div className="auth-shell" style={{width:'100vw',height:'100vh',overflow:'hidden',display:'grid',gridTemplateColumns:'1fr 1fr',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl'}}>
@@ -82,7 +98,7 @@ export default function RegisterPage() {
                 <input id={`reg-${f.k}`} type={f.t} autoComplete={f.ac} required={f.k!=='phone'} placeholder={f.ph} dir={f.ltr?'ltr':'rtl'} value={form[f.k as keyof typeof form]} onChange={set(f.k)} onFocus={focus} onBlur={blur} style={inp}/>
               </div>
             ))}
-            <p style={{fontSize:11,color:T3,textAlign:'center',marginBottom:12}}>بالتسجيل توافقين على <Link href="/terms" style={{color:P,fontWeight:700,textDecoration:'none'}}>شروط الاستخدام</Link></p>
+            <PolicyConsent checked={policyAccepted} onChange={setPolicyAccepted} />
             <button type="submit" disabled={loading} style={{width:'100%',height:46,background:loading?'#8b6dd4':P,color:'#fff',border:'none',borderRadius:11,fontSize:14,fontWeight:900,cursor:loading?'wait':'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",boxShadow:'0 2px 12px rgba(103,71,178,.28)'}}>
               {loading?'جاري الإنشاء...':'إنشاء الحساب ←'}
             </button>
@@ -90,7 +106,7 @@ export default function RegisterPage() {
           {!success&&<div style={{display:'flex',alignItems:'center',gap:10,margin:'12px 0'}}>
             <div style={{flex:1,height:1,background:BR}}/><span style={{fontSize:11,color:'#C8C0D8'}}>أو</span><div style={{flex:1,height:1,background:BR}}/>
           </div>}
-          {!success&&<button onClick={signInWithGoogle} style={{width:'100%',height:42,background:'#fff',border:`1px solid ${BR}`,borderRadius:11,fontSize:13,fontWeight:700,color:T2,display:'flex',alignItems:'center',justifyContent:'center',gap:9,cursor:'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif"}}>
+          {!success&&<button onClick={handleGoogle} disabled={loading} style={{width:'100%',height:42,background:'#fff',border:`1px solid ${BR}`,borderRadius:11,fontSize:13,fontWeight:700,color:T2,display:'flex',alignItems:'center',justifyContent:'center',gap:9,cursor:'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif"}}>
             <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
             التسجيل بحساب Google
           </button>}
