@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { CardBrandsIcon, KnetIcon, ApplePayIcon } from '@/components/ui/PaymentIcons'
 import { type StoreSettings } from '@/lib/store-settings'
@@ -161,7 +162,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
       <div className="checkout-col-summary" style={{background:'#FAFAFA',borderRight:`1px solid ${BR}`,display:'flex',flexDirection:'column',padding:'clamp(20px,5vw,28px)',overflowY:'auto'}}>
         <div style={{fontSize:14,fontWeight:900,color:T1,marginBottom:18}}>ملخص الطلب</div>
         <div style={{display:'flex',alignItems:'center',gap:12,padding:12,background:PL,borderRadius:12,marginBottom:18}}>
-          <div style={{width:46,height:62,borderRadius:9,flexShrink:0,background:'linear-gradient(145deg,#6747B2,#8b6dd4)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>📖</div>
+          <Image src="/rwnak-guide-cover-ar.webp" alt="غلاف النسخة العربية من دليل رونق" width={46} height={66} sizes="46px" style={{width:46,height:66,borderRadius:5,flexShrink:0,objectFit:'cover'}} />
           <div>
             <div style={{fontSize:13,fontWeight:900,color:T1,marginBottom:2}}>{settings.product_name}</div>
             <div style={{fontSize:12,color:T3,display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
