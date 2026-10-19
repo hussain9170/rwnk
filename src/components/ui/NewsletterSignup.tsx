@@ -1,6 +1,5 @@
 'use client'
 import { useId, useState } from 'react'
-import { NEWSLETTER_COPY } from '@/lib/policy-consent'
 
 export function NewsletterSignup() {
   const id = useId()
@@ -13,7 +12,7 @@ export function NewsletterSignup() {
     const form = new FormData(event.currentTarget)
     setBusy(true); setError('')
     try {
-      const response = await fetch('/api/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: form.get('email'), consent: form.get('consent') === 'on', website: form.get('website') }) })
+      const response = await fetch('/api/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: form.get('email'), consent: true, website: form.get('website') }) })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error)
       setSuccess(true)
@@ -26,7 +25,6 @@ export function NewsletterSignup() {
       <label htmlFor={`${id}-email`}>البريد الإلكتروني</label>
       <div className="newsletter-input-row"><input id={`${id}-email`} name="email" type="email" dir="ltr" autoComplete="email" placeholder="you@example.com" maxLength={254} required /><button disabled={busy} type="submit">{busy ? 'جاري الإرسال…' : 'اشتركي بالبريد'}</button></div>
       <div className="newsletter-honeypot" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-      <label className="newsletter-choice"><input name="consent" type="checkbox" required /><span>{NEWSLETTER_COPY}</span></label>
       <a href="/privacy">سياسة الخصوصية</a>
       {error ? <p role="alert">{error}</p> : null}
     </form>}
