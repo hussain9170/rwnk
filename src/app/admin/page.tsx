@@ -16,6 +16,7 @@ import { AnalyticsTab } from '@/components/admin/AnalyticsTab'
 import { OrdersTab } from '@/components/admin/OrdersTab'
 import { PaymentsTab } from '@/components/admin/PaymentsTab'
 import { CustomersTab } from '@/components/admin/CustomersTab'
+import { NewsletterTab } from '@/components/admin/NewsletterTab'
 import { ProductTab } from '@/components/admin/ProductTab'
 import { BookLanguagesTab } from '@/components/admin/BookLanguagesTab'
 import { StaffTab } from '@/components/admin/StaffTab'
@@ -23,7 +24,7 @@ import { WebsiteSettingsTab } from '@/components/admin/WebsiteSettingsTab'
 import { AccountSettingsTab } from '@/components/admin/AccountSettingsTab'
 import { SchemaStatusBanner } from '@/components/admin/SchemaStatusBanner'
 
-type Tab = 'dashboard' | 'analytics' | 'orders' | 'payments' | 'customers' | 'product' | 'languages' | 'staff' | 'website' | 'account'
+type Tab = 'dashboard' | 'analytics' | 'orders' | 'payments' | 'customers' | 'newsletter' | 'product' | 'languages' | 'staff' | 'website' | 'account'
 
 const NAV: { id: Tab; label: string; icon: typeof IconLayoutDashboard }[] = [
   { id: 'dashboard', label: 'لوحة التحكم',      icon: IconLayoutDashboard },
@@ -31,6 +32,7 @@ const NAV: { id: Tab; label: string; icon: typeof IconLayoutDashboard }[] = [
   { id: 'orders',    label: 'الطلبات',          icon: IconReceipt },
   { id: 'payments',  label: 'المدفوعات',        icon: IconCreditCard },
   { id: 'customers', label: 'العملاء',          icon: IconUsers },
+  { id: 'newsletter', label: 'القائمة البريدية', icon: IconUsers },
   { id: 'product',   label: 'إدارة المنتج',     icon: IconBox },
   { id: 'languages', label: 'لغات الكتاب',      icon: IconLanguage },
   { id: 'staff',     label: 'المشرفين',         icon: IconShieldLock },
@@ -96,6 +98,7 @@ function AdminShell() {
         {tab === 'orders' && <OrdersTab />}
         {tab === 'payments' && <PaymentsTab />}
         {tab === 'customers' && <CustomersTab />}
+        {tab === 'newsletter' && <NewsletterTab />}
         {tab === 'product' && <ProductTab />}
         {tab === 'languages' && <BookLanguagesTab />}
         {tab === 'staff' && <StaffTab />}

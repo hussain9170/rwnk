@@ -1037,3 +1037,52 @@ grant select, insert, update on public.newsletter_signups to service_role;
 create index if not exists newsletter_signups_requested_at_idx on public.newsletter_signups (requested_at);
 
 alter table public.newsletter_signups add column if not exists confirmation_started_at timestamptz;
+
+-- §26: Mailing list managed inside Rwnak; no provider contact-management credential.
+alter table public.newsletter_signups add column if not exists unsubscribed_at timestamptz;
+create table if not exists public.newsletter_members (
+  email text primary key,
+  signup_id uuid not null references public.newsletter_signups(id),
+  confirmed_at timestamptz not null,
+  unsubscribed_at timestamptz
+);
+alter table public.newsletter_members enable row level security;
+revoke all on public.newsletter_members from public, anon, authenticated;
+grant select, insert, update on public.newsletter_members to service_role;
+create index if not exists newsletter_members_active_date_idx on public.newsletter_members (confirmed_at desc) where unsubscribed_at is null;
+
+create or replace function public.confirm_newsletter_signup(p_hash text)
+returns boolean language plpgsql security invoker set search_path = public, pg_temp as $$
+declare r public.newsletter_signups%rowtype;
+begin
+  select * into r from public.newsletter_signups where token_hash = p_hash;
+  if not found then return false; end if;
+  perform pg_advisory_xact_lock(hashtextextended(r.email, 74219));
+  select * into r from public.newsletter_signups where token_hash = p_hash for update;
+  if r.unsubscribed_at is not null then return false; end if;
+  if r.status = 'confirmed' then return true; end if;
+  if r.status not in ('pending','confirming') or r.expires_at <= now() then return false; end if;
+  insert into public.newsletter_members(email, signup_id, confirmed_at, unsubscribed_at)
+    values (r.email, r.id, now(), null)
+    on conflict (email) do update set signup_id = excluded.signup_id, confirmed_at = excluded.confirmed_at, unsubscribed_at = null;
+  update public.newsletter_signups set status = 'confirmed', confirmed_at = now() where id = r.id;
+  return true;
+end;
+$$;
+revoke all on function public.confirm_newsletter_signup(text) from public, anon, authenticated;
+grant execute on function public.confirm_newsletter_signup(text) to service_role;
+
+create or replace function public.unsubscribe_newsletter(p_id uuid)
+returns boolean language plpgsql security invoker set search_path = public, pg_temp as $$
+declare target_email text;
+begin
+  select email into target_email from public.newsletter_signups where id = p_id;
+  if not found then return false; end if;
+  perform pg_advisory_xact_lock(hashtextextended(target_email, 74219));
+  update public.newsletter_members set unsubscribed_at = now() where email = target_email;
+  update public.newsletter_signups set unsubscribed_at = now() where email = target_email and unsubscribed_at is null;
+  return true;
+end;
+$$;
+revoke all on function public.unsubscribe_newsletter(uuid) from public, anon, authenticated;
+grant execute on function public.unsubscribe_newsletter(uuid) to service_role;

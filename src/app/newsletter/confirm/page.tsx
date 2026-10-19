@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { NewsletterConfirm } from '@/components/ui/NewsletterConfirm'
 
-export const metadata: Metadata = { title: 'تأكيد الاشتراك | رونق', robots: { index: false, follow: false }, referrer: 'no-referrer' }
+export const metadata: Metadata = { title: 'تأكيد الاشتراك', robots: { index: false, follow: false }, referrer: 'no-referrer' }
 export const dynamic = 'force-dynamic'
 export default async function ConfirmPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const params = await searchParams

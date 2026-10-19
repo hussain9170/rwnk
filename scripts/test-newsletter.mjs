@@ -6,10 +6,10 @@ import { createRequire } from 'node:module'
 import ts from 'typescript'
 const require = createRequire(import.meta.url)
 const policy = { POLICY_VERSION:'2026-10-19', NEWSLETTER_VERSION:'2026-10-19', NEWSLETTER_COPY:'Explicit newsletter consent' }
-let row, sent, calls, failSend, inserted, purchasePayload
+let row, sent, calls, failSend, inserted, purchasePayload, rpcResult=true, rpcError=null, lastRpc
 function reset(status='pending') { row={id:'test-id',email:'test@example.invalid',status,expires_at:new Date(Date.now()+86400000).toISOString()}; sent=[]; calls=[]; failSend=false; inserted=null }
 const db={
- rpc:async()=>({data:true,error:null}),
+ rpc:async(name,args)=>{lastRpc={name,args};return {data:rpcResult,error:rpcError}},
  from:()=>{let operation='select', values, filters=[]; const q={
   insert(v){operation='insert'; values=v; inserted=v; return q},
   update(v){operation='update'; values=v; return q},
@@ -40,9 +40,16 @@ assert.equal(sent.length,1); assert.equal(inserted.token_hash.length,64); assert
 assert(!calls.some(c=>c.url.includes('/contacts')),'Unverified requests cannot enter contacts')
 assert.match(sent[0].html,/newsletter\/confirm\?token=[a-f0-9]{64}/)
 assert(!sent[0].html.includes(inserted.token_hash),'Store only token digest')
-reset(); row.expires_at=new Date(0).toISOString(); assert.equal(await newsletter.confirmNewsletter('a'.repeat(64)),false); assert.equal(calls.length,0)
-reset('confirmed'); assert.equal(await newsletter.confirmNewsletter('a'.repeat(64)),true); assert.equal(calls.length,0,'Replaying a used link cannot resubscribe')
-reset(); assert.equal(await newsletter.confirmNewsletter('a'.repeat(64)),true); assert.equal(row.status,'confirmed'); assert(calls.some(c=>c.url.endsWith('/segments/'+newsletter.NEWSLETTER_SEGMENT)))
+reset(); rpcResult=false; assert.equal(await newsletter.confirmNewsletter('a'.repeat(64)),false)
+rpcResult=true; assert.equal(await newsletter.confirmNewsletter('a'.repeat(64)),true)
+assert.equal(lastRpc.name,'confirm_newsletter_signup'); assert.equal(lastRpc.args.p_hash,newsletter.tokenHash('a'.repeat(64)))
+assert.equal(calls.length,0,'Confirmation uses the atomic database function without provider contact privileges')
+rpcError={message:'unavailable'}; await assert.rejects(newsletter.confirmNewsletter('a'.repeat(64))); rpcError=null
+const testId='00000000-0000-4000-8000-000000000001'
+const unsub=newsletter.unsubscribeToken(testId)
+assert.equal(newsletter.unsubscribeId(unsub),testId)
+assert.equal(newsletter.unsubscribeId(unsub.slice(0,-1)+(unsub.endsWith('a')?'b':'a')),null)
+assert.equal(newsletter.unsubscribeId('bad'),null)
 reset(); failSend=true; await assert.rejects(newsletter.requestNewsletter('test@example.invalid')); assert.equal(row.status,'send_failed')
 assert.equal(newsletter.validNewsletterToken('bad'),false); assert.equal(newsletter.validNewsletterToken('a'.repeat(64)),true)
 const response={json:(body,options={})=>({body,status:options.status??200})}
@@ -61,4 +68,24 @@ assert.equal((await checkout.POST(req({email:'test@example.invalid'}))).status,4
 assert.equal((await checkout.POST(req({email:'test@example.invalid',policyAccepted:true,policyVersion:'old'}))).status,400)
 assert.equal((await checkout.POST(req({email:'test@example.invalid',bookLanguage:'ar',policyAccepted:true,policyVersion:policy.POLICY_VERSION}))).status,200)
 assert.equal(purchasePayload.policy_version,policy.POLICY_VERSION); assert(!Number.isNaN(Date.parse(purchasePayload.policy_accepted_at)))
-console.log('PASS: request/hashed token, no contacts before verification, expiry, replay, segment sync, send failure, token format, checkout consent validation and persisted receipt.')
+// Admin exports reject anonymous requests and neutralise spreadsheet formulas.
+let adminAllowed=false, memberReads=0, activeFilter=false
+class TestResponse extends Response { static json(body,options){return new TestResponse(JSON.stringify(body),options)} }
+const adminRoute=load('src/app/api/admin/newsletter/route.ts',{
+ 'next/server':{NextResponse:TestResponse},
+ '@/lib/admin-auth':{requireAdmin:async()=>({error:adminAllowed?null:new TestResponse('unauthorized',{status:401})})},
+ '@/lib/newsletter':{unsubscribeToken:()=> 'signed-test-token'},
+ '@/lib/admin-db':{getAdminDb:()=>({from:()=>{
+  memberReads++
+  const q={select(){return q},is(key,value){activeFilter=key==='unsubscribed_at'&&value===null;return q},order(){return q},range:async()=>({data:[{email:'=formula@example.invalid',confirmed_at:'2026-10-19',signup_id:testId}],error:null,count:1})}
+  return q
+ }})},
+})
+const adminRequest={nextUrl:new URL('https://example.invalid/api/admin/newsletter?export=csv')}
+assert.equal((await adminRoute.GET(adminRequest)).status,401); assert.equal(memberReads,0)
+adminAllowed=true
+const exported=await adminRoute.GET(adminRequest)
+assert.equal(exported.status,200); assert.equal(exported.headers.get('Cache-Control'),'no-store'); assert(activeFilter)
+const csv=await exported.text()
+assert(csv.includes('"\'=formula@example.invalid"')); assert(csv.includes('unsubscribe?token=signed-test-token'))
+console.log('PASS: hashed signup tokens, sending-only provider access, atomic confirmation delegation, signed unsubscribe tamper rejection, send failures, checkout policy validation and persisted receipt. Expiry/replay/unsubscribe/resubscribe are tested against Postgres in a rolled-back transaction.')
