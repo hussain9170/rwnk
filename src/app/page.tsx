@@ -10,7 +10,7 @@ import {
 } from '@tabler/icons-react'
 import { getStoreSettings, splitHighlight } from '@/lib/store-settings'
 import { getTestimonials, getFaqs, getFeatures, getBookLanguages } from '@/lib/content'
-import { HeroIllustration } from '@/components/ui/HeroIllustration'
+import { GuideArtwork } from '@/components/ui/GuideArtwork'
 import { SITE_URL, publicMetadata, jsonLd } from '@/lib/seo'
 import { GUIDES } from '@/lib/guides'
 
@@ -53,7 +53,7 @@ export default async function HomePage() {
     '@id': `${SITE_URL}/#product`,
     name: settings.product_name,
     description: settings.product_description,
-    image: [settings.product_image_url || settings.hero_image_url || 'https://www.rwnak.net/rwnak-guide-preview.png'],
+    image: [settings.product_image_url || settings.hero_image_url || `${SITE_URL}/rwnak-guide-cover-ar.webp`],
     brand: { '@type': 'Brand', name: 'رَوْنَق' },
     sku: settings.product_id,
     category: 'دليل رقمي للتنظيف المنزلي بصيغة PDF',
@@ -142,9 +142,10 @@ export default async function HomePage() {
                 style={{objectFit:'cover'}}
               />
             ) : (
-              <HeroIllustration />
+              <GuideArtwork />
             )}
           </div>
+          {!settings.hero_image_url && <p style={{position:'relative',textAlign:'center',fontSize:13,color:T3,marginTop:12}}>غلاف النسخة العربية · الدليل بصيغة PDF</p>}
         </div>
       </section>
 
