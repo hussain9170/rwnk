@@ -1,10 +1,8 @@
-import { createHash, randomBytes } from 'node:crypto'
+import { createHash, createHmac, timingSafeEqual, randomBytes } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseServerEnv } from './env'
 import { NEWSLETTER_COPY, NEWSLETTER_VERSION } from './policy-consent'
 
-// Public segment identifier, never a credential. Only verified signups enter it.
-export const NEWSLETTER_SEGMENT = 'c39ab1ee-7037-4842-a9d8-724ede934dc1'
 export const tokenHash = (token: string) => createHash('sha256').update(token).digest('hex')
 export const validNewsletterToken = (token: unknown): token is string => typeof token === 'string' && /^[a-f0-9]{64}$/.test(token)
 export function newsletterDb() {
@@ -41,10 +39,11 @@ export async function requestNewsletter(email: string) {
   if (error || !signup) throw new Error('Could not record newsletter request')
   // Fixed first-party origin: never trust Host/Origin to build email links.
   const confirmUrl = `https://www.rwnak.net/newsletter/confirm?token=${token}`
-  const text = `أهلاً في رونق\nطلبتِ الاشتراك بنصائح تنظيم المنزل وأخبار وعروض رونق.\nلتأكيد اشتراكك، افتحي الرابط واضغطي تأكيد الاشتراك:\n${confirmUrl}\nالرابط صالح لمدة 24 ساعة. إذا ما طلبتِ الاشتراك، تجاهلي الرسالة ولن نضيفك للقائمة.\nتقدرين تلغين الاشتراك من رابط الإلغاء في الرسائل التسويقية.\nرونق | info@rwnak.net`
+  const unsubscribeUrl = `https://www.rwnak.net/newsletter/unsubscribe?token=${unsubscribeToken(signup.id)}`
+  const text = `أهلاً في رونق\nطلبتِ الاشتراك بنصائح تنظيم المنزل وأخبار وعروض رونق.\nلتأكيد اشتراكك، افتحي الرابط واضغطي تأكيد الاشتراك:\n${confirmUrl}\nالرابط صالح لمدة 24 ساعة. إذا ما طلبتِ الاشتراك، تجاهلي الرسالة ولن نضيفك للقائمة.\nلإلغاء الاشتراك أو إيقاف هذا الطلب: ${unsubscribeUrl}\nرونق | info@rwnak.net`
   const response = await resendRequest('/emails', 'POST', {
     from: process.env.EMAIL_FROM, to: [email], subject: 'أكّدي اشتراكك في بريد رونق', text,
-    html: `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تأكيد اشتراك رونق</title></head><body style="margin:0;padding:24px;background:#F7F4FC;font-family:Tahoma,Arial,sans-serif;color:#352D42"><table role="presentation" style="max-width:560px;margin:auto;background:white;border-radius:16px;width:100%"><tr><td style="padding:32px;line-height:1.9"><h1 style="color:#6747B2;font-size:24px">أهلاً في رونق</h1><p>طلبتِ الاشتراك بنصائح تنظيم المنزل وأخبار وعروض رونق. أكّدي اشتراكك من الزر:</p><p><a href="${confirmUrl}" style="display:inline-block;padding:14px 24px;background:#6747B2;color:white;border-radius:10px;text-decoration:none">تأكيد الاشتراك</a></p><p>الرابط صالح لمدة 24 ساعة. إذا ما طلبتِ الاشتراك، تجاهلي الرسالة ولن نضيفك للقائمة.</p><p>تقدرين تلغين الاشتراك من رابط الإلغاء في الرسائل التسويقية.</p><p style="font-size:13px">رونق · <a href="https://www.rwnak.net/privacy">سياسة الخصوصية</a> · info@rwnak.net</p></td></tr></table></body></html>`,
+    html: `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تأكيد اشتراك رونق</title></head><body style="margin:0;padding:24px;background:#F7F4FC;font-family:Tahoma,Arial,sans-serif;color:#352D42"><table role="presentation" style="max-width:560px;margin:auto;background:white;border-radius:16px;width:100%"><tr><td style="padding:32px;line-height:1.9"><h1 style="color:#6747B2;font-size:24px">أهلاً في رونق</h1><p>طلبتِ الاشتراك بنصائح تنظيم المنزل وأخبار وعروض رونق. أكّدي اشتراكك من الزر:</p><p><a href="${confirmUrl}" style="display:inline-block;padding:14px 24px;background:#6747B2;color:white;border-radius:10px;text-decoration:none">تأكيد الاشتراك</a></p><p>الرابط صالح لمدة 24 ساعة. إذا ما طلبتِ الاشتراك، تجاهلي الرسالة ولن نضيفك للقائمة.</p><p><a href="${unsubscribeUrl}">إلغاء الاشتراك أو إيقاف هذا الطلب</a></p><p style="font-size:13px">رونق · <a href="https://www.rwnak.net/privacy">سياسة الخصوصية</a> · info@rwnak.net</p></td></tr></table></body></html>`,
   })
   if (!response.ok) {
     await sb.from('newsletter_signups').update({ status: 'send_failed' }).eq('id', signup.id)
@@ -53,40 +52,20 @@ export async function requestNewsletter(email: string) {
 }
 
 export async function confirmNewsletter(token: string) {
-  const sb = newsletterDb()
-  const { data: signup, error } = await sb.from('newsletter_signups').select('id,email,status,expires_at,confirmation_started_at').eq('token_hash', tokenHash(token)).maybeSingle()
-  if (error) throw new Error('Newsletter lookup failed')
-  if (!signup || !['pending', 'confirming', 'confirmed'].includes(signup.status) || Date.parse(signup.expires_at) <= Date.now()) return false
-  // Do not re-enable an unsubscribed contact by replaying a used link.
-  if (signup.status === 'confirmed') return true
-  if (signup.status === 'confirming' && signup.confirmation_started_at && Date.parse(signup.confirmation_started_at) < Date.now() - 120000) {
-    await sb.from('newsletter_signups').update({ status: 'pending' }).eq('id', signup.id).eq('status', 'confirming').eq('confirmation_started_at', signup.confirmation_started_at)
-  }
-  const { data: claimed, error: claimError } = await sb.from('newsletter_signups').update({ status: 'confirming', confirmation_started_at: new Date().toISOString() }).eq('id', signup.id).eq('status', 'pending').select('id').maybeSingle()
-  if (claimError || !claimed) throw new Error('Confirmation already in progress')
-  try {
-  const contactPath = `/contacts/${encodeURIComponent(signup.email)}`
-  const existing = await resendRequest(contactPath, 'GET')
-  if (existing.status === 404) {
-    const created = await resendRequest('/contacts', 'POST', { email: signup.email, unsubscribed: false })
-    if (!created.ok) throw new Error('Could not create newsletter contact')
-  } else if (existing.ok) {
-    const contact = await existing.json()
-    // Fresh verified request permits resubscription; provider bounce/complaint
-    // suppression is never removed by this endpoint.
-    if (contact.unsubscribed) {
-      const updated = await resendRequest(contactPath, 'PATCH', { unsubscribed: false })
-      if (!updated.ok) throw new Error('Could not update newsletter preference')
-    }
-  } else throw new Error('Could not look up newsletter contact')
-  const added = await resendRequest(`${contactPath}/segments/${NEWSLETTER_SEGMENT}`, 'POST')
-  if (!added.ok) throw new Error('Could not add newsletter contact to segment')
-  const { error: saved } = await sb.from('newsletter_signups').update({ status: 'confirmed', confirmed_at: new Date().toISOString() }).eq('id', signup.id).eq('status', 'confirming')
-  if (saved) throw new Error('Could not save newsletter confirmation')
-  return true
-  } catch (error) {
-    await sb.from('newsletter_signups').update({ status: 'pending' }).eq('id', signup.id).eq('status', 'confirming')
-    throw error
-  }
+  const { data, error } = await newsletterDb().rpc('confirm_newsletter_signup', { p_hash: tokenHash(token) })
+  if (error) throw new Error('Could not confirm newsletter signup')
+  return data === true
 }
 
+export function unsubscribeToken(id: string) {
+  const { key } = getSupabaseServerEnv()
+  if (!key) throw new Error('Newsletter signing unavailable')
+  return `${id}.${createHmac('sha256', key).update(`newsletter-unsubscribe:${id}`).digest('hex')}`
+}
+
+export function unsubscribeId(token: unknown) {
+  if (typeof token !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[0-9a-f]{64}$/.test(token)) return null
+  const [id, signature] = token.split('.')
+  const expected = unsubscribeToken(id).split('.')[1]
+  return timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex')) ? id : null
+}
