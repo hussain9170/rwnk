@@ -249,3 +249,42 @@ table { max-width: 100%; }
 /* Consistent section offsets and comfortable keyboard targets. */
 [id] { scroll-margin-top: 88px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* Guide excerpts are live text, so they stay sharp when enlarged. */
+.guide-previews { margin-top: 40px; }
+.preview-section-label { color: #6747B2; font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+.guide-previews h3 { font-size: clamp(21px, 4vw, 26px); margin-bottom: 10px; }
+.preview-intro, .preview-card-details > p { color: #5D566B; font-size: 15px; line-height: 1.8; }
+.guide-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 24px; }
+.guide-preview-card { min-width: 0; border: 1px solid #E8E2F0; border-radius: 20px; overflow: hidden; background: white; }
+.sample-thumbnail { height: 320px; overflow: hidden; position: relative; background: #F9F6FD; border-bottom: 1px solid #E8E2F0; }
+.sample-thumbnail::after { content: ''; position: absolute; inset: auto 0 0; height: 55px; background: linear-gradient(transparent, #F9F6FD); pointer-events: none; }
+.guide-sample-page { padding: clamp(22px, 5vw, 42px); background: #F9F6FD; color: #352D42; line-height: 1.9; font-size: 16px; }
+.sample-page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #6747B2; padding-bottom: 18px; margin-bottom: 24px; border-bottom: 1px solid #E5DDF0; }
+.sample-page-header > span:last-child { font-size: 12px; }
+.guide-sample-page h4 { font-size: clamp(21px, 4vw, 28px); font-weight: 900; color: #6747B2; margin: 22px 0 12px; line-height: 1.5; }
+.guide-sample-page p { margin-bottom: 16px; }
+.sample-cloth-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 15px; }
+.sample-cloth-table th, .sample-cloth-table td { padding: 10px; background: white; border-block: 1px solid #E8E2F0; text-align: right; }
+.sample-cloth-table th { width: 38%; color: #6747B2; border-right: 1px solid #E8E2F0; border-radius: 0 12px 12px 0; }
+.sample-cloth-table td { border-left: 1px solid #E8E2F0; border-radius: 12px 0 0 12px; }
+.cloth-dot { display: inline-block; width: 14px; height: 14px; border: 1px solid #0002; border-radius: 50%; margin-left: 8px; vertical-align: middle; }
+.sample-note { color: #625970; font-size: 14px; margin-top: 12px; }
+.sample-page-footer { font-size: 12px; color: #625970; border-top: 1px solid #E5DDF0; margin-top: 28px; padding-top: 14px; }
+.sample-reminder { background: #EEE8F8; border: 1px solid #6747B2; border-radius: 14px; padding: 16px; margin-block: 22px; }
+.sample-reminder strong { color: #6747B2; }
+.sample-reminder p { margin: 4px 0 0; }
+.sample-respect-list { padding-right: 22px; }
+.sample-respect-list li { margin-bottom: 12px; }
+.preview-card-details { padding: 22px; }
+.preview-card-details h4 { font-size: 18px; color: #352D42; margin-bottom: 8px; }
+.preview-zoom { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 48px; padding: 12px 14px; margin-top: 18px; border: 1px solid #6747B2; border-radius: 12px; background: white; color: #6747B2; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+.preview-zoom:hover { background: #F2EDF9; }
+.preview-zoom:focus-visible, .preview-dialog-bar button:focus-visible { outline: 3px solid #6747B2; outline-offset: 3px; }
+.guide-preview-dialog { margin: auto; padding: 0; width: min(740px, calc(100% - 24px)); max-height: 90dvh; border: 1px solid #DDD2EF; border-radius: 20px; overflow-y: auto; overscroll-behavior: contain; color: #352D42; }
+.guide-preview-dialog::backdrop { background: #211633b8; }
+html:has(.guide-preview-dialog[open]) { overflow: hidden; }
+.preview-dialog-bar { position: sticky; top: 0; z-index: 1; background: white; border-bottom: 1px solid #E8E2F0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; }
+.preview-dialog-bar h3 { font-size: 16px; margin: 0; }
+.preview-dialog-bar button { flex-shrink: 0; min-height: 44px; padding: 8px 14px; border: 1px solid #E8E2F0; border-radius: 10px; background: #F9F6FD; color: #352D42; font: inherit; cursor: pointer; }
+@media (max-width: 640px) { .guide-preview-grid { grid-template-columns: 1fr; } .sample-thumbnail { height: 290px; } .sample-cloth-table th, .sample-cloth-table td { padding: 8px; } }
