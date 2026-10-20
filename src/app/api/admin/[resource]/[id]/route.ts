@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
+import { invalidatePublicContent } from '@/lib/public-content-cache'
 import { requireAdmin } from '@/lib/admin-auth'
 import { getAdminDb } from '@/lib/admin-db'
 import { RESOURCES, pickFields } from '@/lib/admin-resources'
 import { isMissingTableError, missingTableMessage, updateWithSchemaFallback } from '@/lib/db-resilience'
 
 function revalidateFor(resource: string, id: string) {
+  invalidatePublicContent(resource)
   revalidatePath('/')
   revalidatePath('/faq')
   if (resource === 'pages' && ['about', 'terms', 'privacy', 'refund'].includes(id)) revalidatePath(`/${id}`)
