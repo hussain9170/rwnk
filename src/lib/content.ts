@@ -5,6 +5,7 @@ import { REFUND_CONTENT, TERMS_CONTENT, ABOUT_CONTENT } from './policy-copy'
 
 import type { Metadata } from 'next'
 import { publicMetadata } from './seo'
+import { getPublicList } from './public-content-cache'
 import type { Testimonial, Faq, Feature, ComparisonRow, PageContent, BookLanguage } from '@/types'
 
 export function pageMetadata(page: PageContent): Metadata {
@@ -72,37 +73,25 @@ const FALLBACK_PAGES: Record<string, PageContent> = {
 
 export async function getTestimonials(): Promise<Testimonial[]> {
   try {
-    const sb = await getSb()
-    const { data, error } = await sb.from('testimonials').select('*').eq('is_active', true).order('sort_order', { ascending: true })
-    if (error || !data || data.length === 0) return FALLBACK_TESTIMONIALS
-    return data
+    return await getPublicList<Testimonial>('testimonials')
   } catch { return FALLBACK_TESTIMONIALS }
 }
 
 export async function getFaqs(): Promise<Faq[]> {
   try {
-    const sb = await getSb()
-    const { data, error } = await sb.from('faqs').select('*').eq('is_active', true).order('sort_order', { ascending: true })
-    if (error || !data || data.length === 0) return FALLBACK_FAQS
-    return data
+    return await getPublicList<Faq>('faqs')
   } catch { return FALLBACK_FAQS }
 }
 
 export async function getFeatures(): Promise<Feature[]> {
   try {
-    const sb = await getSb()
-    const { data, error } = await sb.from('features').select('*').eq('is_active', true).order('sort_order', { ascending: true })
-    if (error || !data || data.length === 0) return FALLBACK_FEATURES
-    return data
+    return await getPublicList<Feature>('features')
   } catch { return FALLBACK_FEATURES }
 }
 
 export async function getComparisonRows(): Promise<ComparisonRow[]> {
   try {
-    const sb = await getSb()
-    const { data, error } = await sb.from('comparison_rows').select('*').eq('is_active', true).order('sort_order', { ascending: true })
-    if (error || !data || data.length === 0) return FALLBACK_COMPARISON
-    return data
+    return await getPublicList<ComparisonRow>('comparison_rows')
   } catch { return FALLBACK_COMPARISON }
 }
 

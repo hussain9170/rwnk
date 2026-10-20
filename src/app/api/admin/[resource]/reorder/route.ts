@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
+import { invalidatePublicContent } from '@/lib/public-content-cache'
 import { requireAdmin } from '@/lib/admin-auth'
 import { getAdminDb } from '@/lib/admin-db'
 import { RESOURCES } from '@/lib/admin-resources'
@@ -28,6 +29,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const failures = results
     .map((r, i) => ({ id: orderedIds[i], error: r.error }))
     .filter((r): r is { id: string; error: NonNullable<typeof r.error> } => !!r.error)
+
+  // Reordering may partially succeed; invalidate even when a later row fails.
+  invalidatePublicContent(resource)
 
   if (failures.length > 0) {
     const message = failures.map(f => `${f.id}: ${f.error.message}`).join('; ')

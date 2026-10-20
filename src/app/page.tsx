@@ -14,20 +14,9 @@ import { GuidePreviews } from '@/components/ui/GuidePreviews'
 import { SITE_URL, publicMetadata, jsonLd } from '@/lib/seo'
 import { GUIDES } from '@/lib/guides'
 
-// Force per-request rendering rather than relying on on-demand ISR
-// (revalidatePath) alone to keep this page in sync with admin edits. Without
-// this, Next prerenders the page once at build time (confirmed via `next
-// build`'s route listing: "○ /" = Static) and every subsequent visitor gets
-// that frozen snapshot until on-demand revalidation both fires AND
-// propagates correctly on the actual hosting platform — something that
-// cannot be verified from code alone and is a plausible, exact match for
-// "dashboard saves but the site never updates". Forcing dynamic rendering
-// removes that dependency entirely: every request re-reads store_settings/
-// testimonials/faqs/features/comparison_rows straight from the database, no
-// matter how the deployment's cache/ISR layer behaves. The admin PATCH
-// routes' revalidatePath() calls are left in place as a harmless extra
-// (they still help bust the Next.js Router Cache for client-side
-// navigations) but are no longer load-bearing for correctness.
+// Render each request so price/settings/language availability stay fresh.
+// Published CMS lists have a separate tagged data cache, expired immediately
+// after successful admin edits; the full HTML is never shared from ISR.
 export const dynamic = 'force-dynamic'
 
 const P='#6747B2',PL='#EDE8FF',PT='#26215C',T1='#1A1228',T2='#4A4060',T3='#6B617E',BR='#EDE8F5'

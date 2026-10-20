@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
+import { invalidatePublicContent } from '@/lib/public-content-cache'
 import { requireAdmin } from '@/lib/admin-auth'
 import { getAdminDb } from '@/lib/admin-db'
 import { RESOURCES, pickFields } from '@/lib/admin-resources'
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     console.error(`[admin/${resource}] failed to create: ${dbErr.message}`)
     return NextResponse.json({ error: dbErr.message }, { status: 500 })
   }
+  invalidatePublicContent(resource)
   revalidatePath('/')
   revalidatePath('/faq')
   return NextResponse.json({ data })
