@@ -5,21 +5,21 @@ import MetaPixel from '@/components/analytics/MetaPixel'
 import SnapPixel from '@/components/analytics/SnapPixel'
 import SnapConsent from '@/components/analytics/SnapConsent'
 import './globals.css'
-import { SITE_URL, SHARE_IMAGE } from '@/lib/seo'
+import { SITE_URL, SHARE_IMAGE, PRODUCT_NAME } from '@/lib/seo'
 
 const APP_URL = SITE_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: 'رَوْنَق — دليل تدريب العاملة وتنظيم تنظيف المنزل',
+    default: PRODUCT_NAME,
     template: '%s | رَوْنَق',
   },
   description: 'دليل PDF لتدريب العاملة المنزلية وتنظيم التنظيف في الكويت والخليج، مع خطوات وقوائم متابعة وجداول قابلة للطباعة. اختاري لغة الدليل وحمّليه بعد الدفع.',
   keywords: ['تنظيف منزلي', 'تدريب عاملات', 'دليل تنظيف', 'تنظيف احترافي', 'رونق', 'الكويت'],
   authors: [{ name: 'رَوْنَق', url: APP_URL }],
   openGraph: {
-    title: 'رَوْنَق — دليل التنظيف الاحترافي',
+    title: PRODUCT_NAME,
     description: 'دليل PDF لتدريب العاملة وتنظيم التنظيف المنزلي بخطوات وقوائم وجداول قابلة للطباعة.',
     url: APP_URL,
     siteName: 'رَوْنَق',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'رَوْنَق — دليل التنظيف الاحترافي',
+    title: PRODUCT_NAME,
     description: 'دليل PDF لتدريب العاملة وتنظيم التنظيف المنزلي.',
     images: [SHARE_IMAGE.url],
   },

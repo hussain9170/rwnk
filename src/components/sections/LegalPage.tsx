@@ -1,3 +1,4 @@
+import { breadcrumbs, jsonLd } from '@/lib/seo'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { PageShell } from '@/components/ui/PageShell'
@@ -13,6 +14,7 @@ export function LegalPage({ page, settings }: { page: PageContent; settings: Sto
     <PageShell>
       <Navbar />
       <main style={{ paddingTop: 120, paddingBottom: 80 }}>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbs([{ name: 'الرئيسية', path: '/' }, { name: page.title, path: `/${page.slug}` }])) }} />
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 clamp(20px,6vw,40px)' }}>
           <h1 style={{ fontSize: 'clamp(24px,5.5vw,34px)', fontWeight: 900, marginBottom: 28, color: T1 }}>{page.title}</h1>
           <p style={{ fontSize: 13, color: T2, marginBottom: 28 }}>آخر تحديث: <time dateTime={POLICY_UPDATED}>١٧ أكتوبر ٢٠٢٦</time></p>

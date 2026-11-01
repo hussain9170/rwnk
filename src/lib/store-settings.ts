@@ -1,3 +1,5 @@
+import { PRODUCT_NAME } from './seo'
+
 // Store settings — fetched from Supabase, cached
 // Admin can edit these from the dashboard
 
@@ -48,7 +50,7 @@ export interface StoreSettings {
 export const DEFAULT_SETTINGS: StoreSettings = {
   store_name:       'رَوْنَق',
   store_tagline:    'دليل التنظيف الاحترافي',
-  product_name:     'كتاب رَوْنَق — دليل التنظيف الاحترافي',
+  product_name:     PRODUCT_NAME,
   product_price:    5,
   product_original_price: 7,
   product_currency: 'KWD',
@@ -115,7 +117,12 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     // logs loudly so a duplicate is caught immediately, not indefinitely.
     const { data, error } = await getSingletonRow<Partial<StoreSettings>>(sb, 'store_settings')
     if (error) console.error(`[getStoreSettings] ${error.message} — falling back to DEFAULT_SETTINGS.`)
-    if (data) return { ...DEFAULT_SETTINGS, ...data }
+    if (data) {
+      const settings = { ...DEFAULT_SETTINGS, ...data }
+      // Migrate the original title without overwriting a new title set by the owner.
+      if (settings.product_name === 'كتاب رَوْنَق — دليل التنظيف الاحترافي') settings.product_name = PRODUCT_NAME
+      return settings
+    }
   } catch (e) {
     console.error(`[getStoreSettings] unexpected error — falling back to DEFAULT_SETTINGS: ${e instanceof Error ? e.message : e}`)
   }

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 // Public search URLs describe production, never a preview deployment host.
 export const SITE_URL = 'https://www.rwnak.net'
 export const SITE_NAME = 'رَوْنَق'
+export const PRODUCT_NAME = 'دليل رونق لتدريب العاملة وتنظيم البيت'
 export const SHARE_IMAGE = { url: `${SITE_URL}/rwnak-guide-preview.png`, width: 800, height: 600, alt: 'رَوْنَق — دليل تدريب العاملة وتنظيم التنظيف المنزلي' }
 
 export function publicMetadata(title: string, description: string, path: string): Metadata {
@@ -20,4 +21,8 @@ export function jsonLd(value: unknown): string {
 
 export function breadcrumbs(items: { name: string; path: string }[]) {
   return { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.name, item: new URL(item.path, SITE_URL).toString() })) }
+}
+
+export function formatGuideDate(date: string): string {
+  return new Intl.DateTimeFormat('ar-KW', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kuwait' }).format(new Date(`${date}T00:00:00+03:00`))
 }

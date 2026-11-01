@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { GUIDES } from '@/lib/guides'
-import { SITE_URL, SHARE_IMAGE, publicMetadata, breadcrumbs, jsonLd } from '@/lib/seo'
+import { SITE_URL, SHARE_IMAGE, publicMetadata, breadcrumbs, jsonLd, formatGuideDate } from '@/lib/seo'
 
 export const dynamicParams = false
 export function generateStaticParams() { return GUIDES.map(guide => ({ slug: guide.slug })) }
@@ -26,7 +26,7 @@ export default async function GuidePage({ params }: Props) {
   return <><Navbar /><main className="guides-shell guide-article">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd([article, breadcrumbs([{ name: 'الرئيسية', path: '/' }, { name: 'نصائح منزلية', path: '/guides' }, { name: guide.title, path }])]) }} />
     <nav aria-label="مسار التصفح" className="guide-breadcrumb"><Link href="/">الرئيسية</Link><span aria-hidden="true">/</span><Link href="/guides">نصائح منزلية</Link></nav>
-    <article><header><p className="guide-byline">إعداد رَوْنَق · <time dateTime={guide.updated}>١٨ أكتوبر ٢٠٢٦</time></p><h1>{guide.title}</h1><p className="guide-intro">{guide.intro}</p></header>
+    <article><header><p className="guide-byline">إعداد رَوْنَق · <time dateTime={guide.updated}>{formatGuideDate(guide.updated)}</time></p><h1>{guide.title}</h1><p className="guide-intro">{guide.intro}</p></header>
       <nav aria-label="في هذا المقال" className="guide-toc"><strong>في هذا المقال</strong><ul>{guide.sections.map((section, i) => <li key={section.title}><a href={`#step-${i + 1}`}>{section.title}</a></li>)}</ul></nav>
       {guide.sections.map((section, i) => <section key={section.title} id={`step-${i + 1}`}><h2>{section.title}</h2><p>{section.text}</p>{section.points && <ul>{section.points.map(point => <li key={point}>{point}</li>)}</ul>}</section>)}
     </article>

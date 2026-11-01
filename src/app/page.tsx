@@ -13,6 +13,7 @@ import { GuideArtwork } from '@/components/ui/GuideArtwork'
 import { GuidePreviews } from '@/components/ui/GuidePreviews'
 import { SITE_URL, publicMetadata, jsonLd } from '@/lib/seo'
 import { GUIDES } from '@/lib/guides'
+import { ProductFacts } from '@/components/sections/ProductFacts'
 
 // Render each request so price/settings/language availability stay fresh.
 // Published CMS lists have a separate tagged data cache, expired immediately
@@ -21,7 +22,7 @@ export const dynamic = 'force-dynamic'
 
 const P='#6747B2',PL='#EDE8FF',PT='#26215C',T1='#1A1228',T2='#4A4060',T3='#6B617E',BR='#EDE8F5'
 
-export const metadata: Metadata = publicMetadata('دليل تدريب العاملة وتنظيم تنظيف المنزل', 'رونق دليل PDF لتدريب العاملة المنزلية وتنظيم تنظيف البيت في الكويت والخليج. خطوات غرفة بغرفة وقوائم متابعة وجداول قابلة للطباعة، باللغة المختارة.', '/')
+export const metadata: Metadata = publicMetadata('دليل رونق لتدريب العاملة وتنظيم البيت', 'رونق دليل PDF لتدريب العاملة المنزلية وتنظيم تنظيف البيت في الكويت والخليج. خطوات غرفة بغرفة وقوائم متابعة وجداول قابلة للطباعة، باللغة المختارة.', '/')
 
 const ICON_MAP: Record<string, typeof IconStarFilled> = {
   IconStarFilled, IconCheck, IconCalendar, IconPhoto, IconBook2,
@@ -46,7 +47,7 @@ export default async function HomePage() {
     brand: { '@type': 'Brand', name: 'رَوْنَق' },
     sku: settings.product_id,
     category: 'دليل رقمي للتنظيف المنزلي بصيغة PDF',
-    url: SITE_URL,
+    url: `${SITE_URL}/`,
     offers: {
       '@type': 'Offer',
       price: settings.product_price,
@@ -60,7 +61,7 @@ export default async function HomePage() {
   return (
     <div style={{fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl',background:'#fff',color:T1}}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd([
-        { '@context': 'https://schema.org', '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'رَوْنَق', alternateName: ['رونق', 'RWNAK'], url: SITE_URL, logo: `${SITE_URL}/logo-icon.png`, email: settings.email },
+        { '@context': 'https://schema.org', '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'رَوْنَق', alternateName: ['رونق', 'RWNAK'], url: SITE_URL, logo: `${SITE_URL}/logo-icon.png`, email: settings.email, sameAs: [...(/^@?[a-zA-Z0-9._]+$/.test(settings.instagram) ? [`https://www.instagram.com/${settings.instagram.replace(/^@/, '')}/`] : []), 'https://www.snapchat.com/add/rwnak.official'] },
         { '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${SITE_URL}/#website`, name: 'رَوْنَق', alternateName: ['رونق', 'RWNAK'], url: SITE_URL, inLanguage: 'ar', publisher: { '@id': `${SITE_URL}/#organization` } },
         productJsonLd,
       ]) }} />
@@ -81,7 +82,7 @@ export default async function HomePage() {
           <p className="hero-description" style={{fontSize:16,color:T2,lineHeight:1.75,marginBottom:24,maxWidth:460}}>
             {settings.hero_subtitle}
           </p>
-          <p className="hero-product-summary" style={{fontSize:15,color:T2,lineHeight:1.8,marginBottom:18}}>66 مهمة بخطوات واضحة · PDF · لغة واحدة تختارينها · {settings.product_price} د.ك</p>
+          <p className="hero-product-summary" style={{fontSize:15,color:T2,lineHeight:1.8,marginBottom:18}}>٦٦ مهمة بخطوات واضحة · PDF · لغة واحدة تختارينها · {settings.product_price} د.ك</p>
           <div className="hero-cta-row" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:12,marginBottom:20}}>
             <Link href="/checkout" style={{background:P,color:'#fff',display:'inline-flex',alignItems:'center',gap:8,fontSize:'clamp(15px,3vw,18px)',fontWeight:900,padding:'17px clamp(24px,5vw,32px)',borderRadius:16,textDecoration:'none',boxShadow:'0 4px 20px rgba(103,71,178,.35)'}}>
               {settings.hero_cta_text} — {settings.product_price} د.ك
@@ -183,7 +184,7 @@ export default async function HomePage() {
       </div>
 
       {/* ── TESTIMONIALS ── (hidden by default — toggle in Admin ▸ Content) */}
-      {settings.testimonials_visible && (
+      {settings.testimonials_visible && testimonials.length > 0 && (
         <div style={{background:'#fff',borderBottom:`1px solid ${BR}`}}>
           <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
             <div style={{fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:8}}>الشهادات</div>
@@ -219,21 +220,9 @@ export default async function HomePage() {
       <section id="content" style={{background:'#FAFAFA',borderBottom:`1px solid ${BR}`}}>
         <span id="compare" aria-hidden="true" />
         <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
-          <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:12}}>شنو يشمل دليل رَوْنَق؟</h2>
+          <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:12}}>{settings.product_name}</h2>
           <p style={{color:T2,lineHeight:1.8,marginBottom:24}}>مرجع ترجعين له وقت التدريب والمتابعة، على الجهاز أو مطبوع داخل المنزل.</p>
-          <dl style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:20,padding:'8px 24px'}}>
-            {[
-              ['خطوات التنظيف', 'مهام مرتبة تساعدك على شرح العمل غرفة بغرفة.'],
-              ['قوائم المتابعة', 'نقاط واضحة لمراجعة المهام والتفاصيل.'],
-              ['جداول التنظيم', 'روتين يومي وأسبوعي وشهري قابل للطباعة.'],
-              ['نسخة رقمية', 'ملف PDF باللغة المختارة، للاستخدام المنزلي.'],
-            ].map(([title,description])=><div key={title} style={{padding:'18px 0',borderBottom:`1px solid ${BR}`}}><dt style={{fontWeight:900,color:P,marginBottom:6}}>{title}</dt><dd style={{color:T2,fontSize:14,lineHeight:1.8}}>{description}</dd></div>)}
-          </dl>
-          <div style={{marginTop:28}}>
-            <h3 style={{fontSize:19,marginBottom:12}}>اختاري اللغة المناسبة للعاملة</h3>
-            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{languages.map(language=><span key={language.language_code} style={{background:PL,color:PT,padding:'7px 14px',borderRadius:999,fontSize:14,fontWeight:700}}>{language.name_ar}</span>)}</div>
-            <p style={{fontSize:14,color:T2,lineHeight:1.8,marginTop:14}}>السعر {settings.product_price} د.ك لنسخة واحدة باللغة التي تختارينها عند الدفع، وليس لجميع اللغات معاً.</p>
-          </div>
+          <ProductFacts settings={settings} languages={languages} />
         </div>
       </section>
 

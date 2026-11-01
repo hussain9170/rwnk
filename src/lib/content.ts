@@ -21,11 +21,8 @@ async function getSb() {
   ) as any
 }
 
-const FALLBACK_TESTIMONIALS: Testimonial[] = [
-  { id: 'f1', name: 'أم ماجد',      location: 'الكويت',  image_url: null, rating: 5, review_text: 'اشتريت الكتاب وأعطيته للعاملة. الأسبوع الأول كان فرقاً واضحاً.',   sort_order: 1, is_active: true },
-  { id: 'f2', name: 'نورة العنزي',  location: 'الرياض',  image_url: null, rating: 5, review_text: 'استخدمناه في تدريب موظفاتنا. وفّر وقت التدريب ورفع مستوى الخدمة.', sort_order: 2, is_active: true },
-  { id: 'f3', name: 'سارة الدوسري', location: 'البحرين', image_url: null, rating: 4, review_text: 'القوائم الجاهزة للطباعة هي الأفضل — علّقتها في المطبخ والحمام.',   sort_order: 3, is_active: true },
-]
+// Never substitute sample reviews for customer evidence when the CMS is unavailable.
+const FALLBACK_TESTIMONIALS: Testimonial[] = []
 
 const FALLBACK_FAQS: Faq[] = [
   { id: 'f1', question: 'كيف أستلم الكتاب بعد الشراء؟', answer: 'تحميل فوري — بعد الدفع تصلك رسالة برابط التحميل المباشر.', sort_order: 1, is_active: true },
