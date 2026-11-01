@@ -58,7 +58,7 @@ export default async function HomePage() {
   return (
     <div style={{fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl',background:'#fff',color:T1}}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd([
-        { '@context': 'https://schema.org', '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'رَوْنَق', alternateName: ['رونق', 'RWNAK'], url: SITE_URL, logo: `${SITE_URL}/logo-icon.png`, email: settings.email, sameAs: [...(/^@?[a-zA-Z0-9._]+$/.test(settings.instagram) ? [`https://www.instagram.com/${settings.instagram.replace(/^@/, '')}/`] : []), 'https://www.snapchat.com/add/rwnak.official'] },
+        { '@context': 'https://schema.org', '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'رَوْنَق', alternateName: ['رونق', 'RWNAK'], url: SITE_URL, logo: `${SITE_URL}/logo-icon.png`, email: settings.email, sameAs: [...(/^@?[a-zA-Z0-9._]+$/.test(settings.instagram) ? [`https://www.instagram.com/${settings.instagram.replace(/^@/, '')}/`] : []), 'https://www.snapchat.com/add/rwnak.official', ...(/^@?[a-zA-Z0-9_]+$/.test(settings.twitter) ? [`https://x.com/${settings.twitter.replace(/^@/, '')}`] : [])] },
         { '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${SITE_URL}/#website`, name: 'رَوْنَق', alternateName: ['رونق', 'RWNAK'], url: SITE_URL, inLanguage: 'ar', publisher: { '@id': `${SITE_URL}/#organization` } },
         productJsonLd,
       ]) }} />

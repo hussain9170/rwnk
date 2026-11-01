@@ -37,7 +37,7 @@ function buildSocial(S: StoreSettings) {
   return [
     { icon: IconBrandInstagram, href: `https://instagram.com/${S.instagram.replace('@','')}`, label: 'انستغرام' },
     { icon: IconBrandSnapchat, href: 'https://www.snapchat.com/add/rwnak.official', label: 'سناب شات' },
-    { icon: IconBrandTwitter,   href: `https://twitter.com/${S.twitter.replace('@','')}`,    label: 'تويتر'    },
+    { icon: IconBrandTwitter,   href: `https://x.com/${S.twitter.replace('@','')}`,    label: 'إكس'    },
   ]
 }
 

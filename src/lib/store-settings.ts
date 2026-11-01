@@ -58,7 +58,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   whatsapp:         '',
   email:            'info@rwnak.net',
   instagram:        '@rwnak.official',
-  twitter:          '@rwnk',
+  twitter:          '@Rwnak_official',
   primary_color:    '#6747B2',
   downloads_limit:  5,
 
