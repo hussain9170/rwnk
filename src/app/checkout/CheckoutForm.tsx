@@ -197,7 +197,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
         </div>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 0',borderTop:`1px solid ${BR}`,marginBottom:20}}>
           <span style={{fontSize:14,fontWeight:900,color:T1}}>الإجمالي</span>
-          <span style={{fontSize:26,fontWeight:900,color:P,letterSpacing:-0.5}}>{price} <span style={{fontSize:13,fontWeight:400,color:T3,letterSpacing:'normal'}}>د.ك</span></span>
+          <span style={{fontSize:26,fontWeight:900,color:P,letterSpacing:-0.5}}>{arabicNumber(price)} <span style={{fontSize:13,fontWeight:400,color:T3,letterSpacing:'normal'}}>د.ك</span></span>
         </div>
         <p aria-live="polite" style={{fontSize:15,fontWeight:800,color:P,background:PL,borderRadius:10,padding:12,marginBottom:16}}>{bookLanguage ? `نسختج: ${languages.find(l=>l.language_code===bookLanguage)?.name_ar} فقط` : 'اختاري لغة واحدة من الخيارات أعلاه'}</p>
         <div ref={policyField}><PolicyConsent checked={policyAccepted} onChange={value => { setPolicyAccepted(value); setPolicyError('') }} purchase /></div>
