@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import { arabicNumber } from '@/lib/display'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { NewsletterSignup } from '@/components/ui/NewsletterSignup'
 import { C } from '@/lib/theme'
@@ -19,7 +20,7 @@ function buildLinks() {
     ],
     'حسابي': [
       { label: 'شراء الكتاب',      href: '/checkout'  },
-      { label: 'دخول العملاء',     href: '/login'     },
+      { label: 'مكتبتي',     href: '/library'     },
     ],
     'الدعم': [
       { label: 'من نحن',           href: '/about'   },
@@ -65,7 +66,7 @@ export default function Footer({ settings, showCta = true }: { settings?: StoreS
             padding: '14px 28px', borderRadius: 12, display: 'inline-block',
             boxShadow: '0 4px 20px rgba(103,71,178,.5)', flexShrink: 0, textDecoration: 'none',
           }}>
-            اشتري الآن — {S.product_price} د.ك
+            اشتري الآن — {arabicNumber(S.product_price)} د.ك
           </Link>
         </div>
       </div>

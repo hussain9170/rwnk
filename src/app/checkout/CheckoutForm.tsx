@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { arabicNumber } from '@/lib/display'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { CardBrandsIcon, KnetIcon, ApplePayIcon } from '@/components/ui/PaymentIcons'
 import { type StoreSettings } from '@/lib/store-settings'
@@ -93,7 +94,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
   }
 
   const price = settings.product_price
-  const priceLabel = `${price} د.ك`
+  const priceLabel = `${arabicNumber(price)} د.ك`
 
   return (
     <main><form noValidate onSubmit={event => { event.preventDefault(); void handlePay() }} className="checkout-shell" style={{width:'100%',maxWidth:1120,margin:'0 auto',minHeight:'100vh',display:'grid',gridTemplateColumns:'minmax(0,1fr) 350px',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl',background:'#fff'}}>
@@ -171,7 +172,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
       <div className="checkout-col-summary" style={{background:'#FAFAFA',borderRight:`1px solid ${BR}`,display:'flex',flexDirection:'column',padding:'clamp(20px,5vw,28px)',overflowY:'auto'}}>
         <div style={{fontSize:14,fontWeight:900,color:T1,marginBottom:18}}>ملخص الطلب</div>
         <div style={{display:'flex',alignItems:'center',gap:12,padding:12,background:PL,borderRadius:12,marginBottom:18}}>
-          <Image src="/rwnak-guide-cover-ar.webp" alt="غلاف النسخة العربية من دليل رونق" width={46} height={66} sizes="46px" style={{width:46,height:66,borderRadius:5,flexShrink:0,objectFit:'cover'}} />
+          {bookLanguage === 'ar' ? <Image src="/rwnak-guide-cover-ar.webp" alt="غلاف النسخة العربية من دليل رونق" width={46} height={66} sizes="46px" style={{width:46,height:66,borderRadius:5,flexShrink:0,objectFit:'cover'}} /> : <div className="neutral-guide-cover" aria-label="دليل رونق الرقمي"><span>رَوْنَق</span><small>PDF</small></div>}
           <div>
             <div style={{fontSize:13,fontWeight:900,color:T1,marginBottom:2}}>{settings.product_name}</div>
             <div style={{fontSize:12,color:T3,display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
@@ -183,12 +184,12 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
             <div style={{fontSize:14,fontWeight:700,color:P,marginTop:6}}>تحميل بعد تأكيد الدفع</div>
           </div>
         </div>
-        <p style={{fontSize:14,color:T2,lineHeight:1.8,marginBottom:18}}>تقدرين تحمّلين نفس ملف الدليل حتى {settings.downloads_limit} مرات إجمالاً، باللغة اللي اخترتيها. الطلب يشمل نسخة بلغة واحدة.</p>
+        <p style={{fontSize:14,color:T2,lineHeight:1.8,marginBottom:18}}>تقدرين تحمّلين نفس ملف الدليل حتى {arabicNumber(settings.downloads_limit)} مرات إجمالاً، باللغة اللي اخترتيها. الطلب يشمل نسخة بلغة واحدة.</p>
         <div style={{borderTop:`1px solid ${BR}`,paddingTop:14,marginBottom:14}}>
           <div style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:9}}>
             <span style={{color:T3}}>سعر الكتاب</span>
             <span style={{display:'flex',alignItems:'baseline',gap:6}}>
-              <span style={{fontWeight:700,color:T3,textDecoration:'line-through',fontSize:12}}>{settings.product_original_price} د.ك</span>
+              <span style={{fontWeight:700,color:T3,textDecoration:'line-through',fontSize:12}}>{arabicNumber(settings.product_original_price)} د.ك</span>
               <span style={{fontWeight:900,color:P}}>{priceLabel}</span>
             </span>
           </div>

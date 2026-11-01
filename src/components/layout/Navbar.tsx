@@ -85,7 +85,7 @@ export default function Navbar({ rightContent }: NavbarProps) {
               }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = C.primary; (e.currentTarget as HTMLElement).style.borderColor = C.border2 }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = C.text3; (e.currentTarget as HTMLElement).style.borderColor = C.border }}>
-                دخول العملاء
+                مكتبتي / تسجيل الدخول
               </Link>
               <Link href="/checkout" style={{
                 background: C.primary, color: '#fff', fontSize: 13, fontWeight: 700,

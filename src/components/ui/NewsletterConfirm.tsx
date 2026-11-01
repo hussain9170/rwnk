@@ -21,6 +21,7 @@ export function NewsletterConfirm({ token, unsubscribe = false }: { token: strin
     <h1>{unsubscribe ? (done ? 'تم إلغاء الاشتراك' : 'إلغاء الاشتراك ببريد رونق') : (done ? 'تم تفعيل اشتراكج' : 'تأكيد الاشتراك ببريد رونق')}</h1>
     <p>{unsubscribe ? 'إلغاء الاشتراك يوقف الرسائل التسويقية، وتستمر رسائل الطلبات والحساب.' : done ? 'بتوصلج نصائح تنظيم البيت وأخبار وعروض رونق. تقدرين تلغين الاشتراك من رابط الإلغاء في الرسائل.' : 'اضغطي الزر لتفعيل الاشتراك بنصائح تنظيم المنزل وأخبار وعروض رونق.'}</p>
     {!done ? <button className="newsletter-confirm-button" onClick={confirm} disabled={busy || !token}>{busy ? 'جاري الحفظ…' : unsubscribe ? 'إلغاء الاشتراك' : 'تأكيد الاشتراك'}</button> : null}
+    {done && !unsubscribe ? <a className="newsletter-gift-link" href="/newsletter/gift">افتحي جدولج الأسبوعي المجاني ←</a> : null}
     {!token && !done ? <p>افتحي رابط التفعيل الموجود في بريدج. إذا انتهت صلاحيته، اشتركي مرة ثانية من الموقع.</p> : null}
     {error ? <p role="alert">{error}</p> : null}
   </div>

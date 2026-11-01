@@ -65,8 +65,8 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   product_description:  'دليل عملي يساعدك على تدريب العاملة وتنظيم التنظيف، بخطوات وقوائم مستوحاة من الضيافة الفندقية.',
   product_image_url:    null,
   hero_badge:            'الإصدار الأول — متاح الآن',
-  hero_title:             'دليل عملي لتدريب العاملة و*تنظيم البيت*',
-  hero_subtitle:          'دليل عملي يساعدك على تدريب العاملة وتنظيم التنظيف، بخطوات وقوائم مستوحاة من الضيافة الفندقية.',
+  hero_title:             'كل يوم تعيدين *نفس التعليمات؟*',
+  hero_subtitle:          'خلّي خطوات الشغل واضحة من البداية. دليل رونق PDF يساعدج تشرحين المهام للعاملة وتتابعين روتين البيت، باللغة اللي تختارينها.',
   hero_cta_text:          'اشتري الدليل',
   pricing_cta_text:       'اشتري وحمّلي الدليل',
   final_cta_title:        'ابدئي بروتين أوضح لمنزلك',
@@ -121,6 +121,8 @@ export async function getStoreSettings(): Promise<StoreSettings> {
       const settings = { ...DEFAULT_SETTINGS, ...data }
       // Migrate the original title without overwriting a new title set by the owner.
       if (settings.product_name === 'كتاب رَوْنَق — دليل التنظيف الاحترافي') settings.product_name = PRODUCT_NAME
+      if (['دليل عملي لتدريب العاملة و*تنظيم البيت*', 'منزلك يستحق *مستوى* الفنادق الراقية'].includes(settings.hero_title)) settings.hero_title = DEFAULT_SETTINGS.hero_title
+      if (settings.hero_subtitle === 'دليل عملي يساعدك على تدريب العاملة وتنظيم التنظيف، بخطوات وقوائم مستوحاة من الضيافة الفندقية.') settings.hero_subtitle = DEFAULT_SETTINGS.hero_subtitle
       return settings
     }
   } catch (e) {

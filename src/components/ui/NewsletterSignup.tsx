@@ -20,11 +20,11 @@ export function NewsletterSignup() {
     finally { setBusy(false) }
   }
   return <section className="newsletter-signup" aria-labelledby={`${id}-heading`}>
-    <div><h2 id={`${id}-heading`}>خلّي نصائح رونق توصل لبريدج</h2><p>نصائح لتنظيم البيت وتدريب العاملة، وأخبار وعروض رونق.</p></div>
+    <div><h2 id={`${id}-heading`}>جدول أسبوعي مجاني ينظّم شغل البيت</h2><p>فعّلي اشتراكج وخذي جدول تنظيف أسبوعي قابل للطباعة، ومعاه نصائح وأخبار وعروض رونق. تقدرين تلغين الاشتراك بأي وقت.</p></div>
     {success ? <p role="status">راجعي بريدج لتفعيل الاشتراك. ممكن تلقين الرسالة في البريد غير المرغوب؛ إذا ما وصلت، جرّبي لاحقاً.</p> : <form onSubmit={submit}>
       <label htmlFor={`${id}-email`}>البريد الإلكتروني</label>
       <div className="newsletter-input-row"><input id={`${id}-email`} name="email" type="email" dir="ltr" autoComplete="email" placeholder="you@example.com" maxLength={254} required /><button disabled={busy} type="submit">{busy ? 'جاري الإرسال…' : 'اشتركي بالبريد'}</button></div>
-      <div className="newsletter-honeypot" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+      <div className="newsletter-honeypot" hidden inert aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
       <a href="/privacy">سياسة الخصوصية</a>
       {error ? <p role="alert">{error}</p> : null}
     </form>}

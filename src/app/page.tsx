@@ -4,15 +4,17 @@ import type { Metadata } from 'next'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import {
-  IconShieldCheck, IconBolt, IconStarFilled, IconCheck, IconCircleCheck,
-  IconBook2, IconCalendar, IconPhoto, IconLayoutGrid,
+  IconShieldCheck, IconBolt, IconStarFilled, IconCircleCheck,
+
 } from '@tabler/icons-react'
 import { getStoreSettings, splitHighlight } from '@/lib/store-settings'
-import { getTestimonials, getFaqs, getFeatures, getBookLanguages } from '@/lib/content'
+import { getTestimonials, getFaqs, getBookLanguages } from '@/lib/content'
 import { GuideArtwork } from '@/components/ui/GuideArtwork'
 import { GuidePreviews } from '@/components/ui/GuidePreviews'
 import { SITE_URL, publicMetadata, jsonLd } from '@/lib/seo'
 import { GUIDES } from '@/lib/guides'
+import { MobilePurchaseBar } from '@/components/sections/MobilePurchaseBar'
+import { arabicNumber } from '@/lib/display'
 import { ProductFacts } from '@/components/sections/ProductFacts'
 
 // Render each request so price/settings/language availability stay fresh.
@@ -24,18 +26,13 @@ const P='#6747B2',PL='#EDE8FF',PT='#26215C',T1='#1A1228',T2='#4A4060',T3='#6B617
 
 export const metadata: Metadata = publicMetadata('دليل رونق لتدريب العاملة وتنظيم البيت', 'رونق دليل PDF لتدريب العاملة المنزلية وتنظيم تنظيف البيت في الكويت والخليج. خطوات غرفة بغرفة وقوائم متابعة وجداول قابلة للطباعة، باللغة المختارة.', '/')
 
-const ICON_MAP: Record<string, typeof IconStarFilled> = {
-  IconStarFilled, IconCheck, IconCalendar, IconPhoto, IconBook2,
-  IconShieldCheck, IconBolt, IconCircleCheck, IconLayoutGrid,
-}
-
 export default async function HomePage() {
-  const [settings, faqs, features, languages] = await Promise.all([
-    getStoreSettings(), getFaqs(), getFeatures(), getBookLanguages(),
+  const [settings, faqs, languages] = await Promise.all([
+    getStoreSettings(), getFaqs(), getBookLanguages(),
   ])
   const testimonials = settings.testimonials_visible ? await getTestimonials() : []
 
-  const hero = splitHighlight(settings.hero_title.replace('منزلك يستحق *مستوى* الفنادق الراقية', 'دليل عملي لتدريب العاملة و*تنظيم البيت*'))
+  const hero = splitHighlight(settings.hero_title)
 
   const productJsonLd = {
     '@context': 'https://schema.org',
@@ -82,18 +79,18 @@ export default async function HomePage() {
           <p className="hero-description" style={{fontSize:16,color:T2,lineHeight:1.75,marginBottom:24,maxWidth:460}}>
             {settings.hero_subtitle}
           </p>
-          <p className="hero-product-summary" style={{fontSize:15,color:T2,lineHeight:1.8,marginBottom:18}}>٦٦ مهمة بخطوات واضحة · PDF · لغة واحدة تختارينها · {settings.product_price} د.ك</p>
+          <p className="hero-product-summary" style={{fontSize:15,color:T2,lineHeight:1.8,marginBottom:18}}>٦٦ مهمة بخطوات واضحة · PDF · لغة واحدة تختارينها · {arabicNumber(settings.product_price)} د.ك</p>
           <div className="hero-cta-row" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:12,marginBottom:20}}>
-            <Link href="/checkout" style={{background:P,color:'#fff',display:'inline-flex',alignItems:'center',gap:8,fontSize:'clamp(15px,3vw,18px)',fontWeight:900,padding:'17px clamp(24px,5vw,32px)',borderRadius:16,textDecoration:'none',boxShadow:'0 4px 20px rgba(103,71,178,.35)'}}>
-              {settings.hero_cta_text} — {settings.product_price} د.ك
+            <Link id="hero-buy" href="/checkout" style={{background:P,color:'#fff',display:'inline-flex',alignItems:'center',gap:8,fontSize:'clamp(15px,3vw,18px)',fontWeight:900,padding:'17px clamp(24px,5vw,32px)',borderRadius:16,textDecoration:'none',boxShadow:'0 4px 20px rgba(103,71,178,.35)'}}>
+              {settings.hero_cta_text} — {arabicNumber(settings.product_price)} د.ك
             </Link>
             <a href="#preview-heading" style={{color:P,display:'inline-flex',alignItems:'center',gap:6,fontSize:14,fontWeight:800,padding:'12px 6px',textDecoration:'none'}}>
               شوفي صفحات من الدليل ←
             </a>
           </div>
           <div className="hero-price-row" style={{display:'flex',alignItems:'baseline',gap:8,marginBottom:18}}>
-            <span style={{fontSize:15,color:T3,textDecoration:'line-through'}}>{settings.product_original_price} د.ك</span>
-            <span style={{fontSize:18,fontWeight:900,color:P}}>{settings.product_price} د.ك</span>
+            <span style={{fontSize:15,color:T3,textDecoration:'line-through'}}>{arabicNumber(settings.product_original_price)} د.ك</span>
+            <span style={{fontSize:18,fontWeight:900,color:P}}>{arabicNumber(settings.product_price)} د.ك</span>
             <span style={{fontSize:12,fontWeight:700,color:'#0F6E56',background:'#E1F5EE',padding:'3px 10px',borderRadius:999}}>عرض الإطلاق</span>
           </div>
           <div className="hero-trust-row" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:'8px 20px',fontSize:14,color:T3}}>
@@ -143,30 +140,13 @@ export default async function HomePage() {
         <GuidePreviews />
       </div>
 
-      {/* ── SOLUTION ── */}
-      <div id="features" style={{maxWidth:900,margin:'0 auto',padding:'32px clamp(20px,6vw,40px)'}}>
-        <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:24}}>شلون يساعدج الدليل؟</h2>
-        <div className="feature-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,240px),1fr))',gap:14}}>
-          {features.map((f)=>{
-            const Icon = ICON_MAP[f.icon] ?? IconCircleCheck
-            return (
-              <div key={f.id} style={{background:'#fff',border:`0.5px solid ${BR}`,borderRadius:16,padding:24}}>
-                <div style={{width:42,height:42,borderRadius:12,background:PL,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14}}>
-                  <Icon size={20} color={P} />
-                </div>
-                <div style={{fontSize:15,fontWeight:900,marginBottom:5}}>{f.title}</div>
-                <div style={{fontSize:13,color:T2,lineHeight:1.6}}>{f.description}</div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+      <span id="features" aria-hidden="true" />
 
       {/* ── STEPS ── */}
       <div id="steps" style={{background:'#FAFAFA',borderTop:`1px solid ${BR}`,borderBottom:`1px solid ${BR}`}}>
         <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
           <div style={{fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:8}}>كيف تعمل</div>
-          <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:36}}>3 خطوات وتنتهي</h2>
+          <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:36}}>٣ خطوات وتبدين</h2>
           <div className="grid-3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:20}}>
             {[
               {n:'١',title:'اختاري اللغة واشتري',desc:'ادفعي مرة واحدة وحمّلي نسخة PDF باللغة المختارة'},
@@ -182,6 +162,16 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* ── CONTENTS ── */}
+      <section id="content" style={{background:'#FAFAFA',borderBottom:`1px solid ${BR}`}}>
+        <span id="compare" aria-hidden="true" />
+        <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
+          <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:12}}>{settings.product_name}</h2>
+          <p style={{color:T2,lineHeight:1.8,marginBottom:24}}>مرجع ترجعين له وقت التدريب والمتابعة، على الجهاز أو مطبوع داخل المنزل.</p>
+          <ProductFacts settings={settings} languages={languages} />
+        </div>
+      </section>
 
       {/* ── TESTIMONIALS ── (hidden by default — toggle in Admin ▸ Content) */}
       {settings.testimonials_visible && testimonials.length > 0 && (
@@ -216,25 +206,15 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* ── CONTENTS ── */}
-      <section id="content" style={{background:'#FAFAFA',borderBottom:`1px solid ${BR}`}}>
-        <span id="compare" aria-hidden="true" />
-        <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
-          <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:12}}>{settings.product_name}</h2>
-          <p style={{color:T2,lineHeight:1.8,marginBottom:24}}>مرجع ترجعين له وقت التدريب والمتابعة، على الجهاز أو مطبوع داخل المنزل.</p>
-          <ProductFacts settings={settings} languages={languages} />
-        </div>
-      </section>
-
       {/* ── PRICING ── */}
       <div id="pricing" style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)',textAlign:'center'}}>
         <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:6}}>نسختك الرقمية — دفعة واحدة</h2>
         <p style={{fontSize:15,color:T2,marginBottom:36}}>اختاري لغة واحدة، واستلمي الدليل بعد تأكيد الدفع</p>
         <div style={{maxWidth:380,margin:'0 auto',background:'#fff',border:`2px solid ${P}`,borderRadius:24,padding:'clamp(28px,7vw,36px) clamp(22px,6vw,32px)',position:'relative'}}>
           <div style={{position:'absolute',top:18,left:18,background:'#E1F5EE',color:'#0F6E56',fontSize:11,fontWeight:900,padding:'4px 14px',borderRadius:999}}>عرض الإطلاق</div>
-          <div style={{fontSize:15,color:T3,textDecoration:'line-through',marginBottom:4}}>{settings.product_original_price} دينار</div>
+          <div style={{fontSize:15,color:T3,textDecoration:'line-through',marginBottom:4}}>{arabicNumber(settings.product_original_price)} دينار</div>
           <div style={{fontSize:'clamp(38px,10vw,52px)',fontWeight:900,color:P,letterSpacing:-2,lineHeight:1,marginBottom:4}}>
-            {settings.product_price} <span style={{fontSize:18,fontWeight:400,color:T3,letterSpacing:'normal'}}>دينار كويتي</span>
+            {arabicNumber(settings.product_price)} <span style={{fontSize:18,fontWeight:400,color:T3,letterSpacing:'normal'}}>دينار كويتي</span>
           </div>
           <div style={{fontSize:13,color:T3,marginBottom:24}}>دفعة واحدة · بدون اشتراك شهري</div>
           {['نسخة الدليل PDF باللغة المختارة','قوائم التفتيش للطباعة','الجداول اليومية والأسبوعية','تحديثات الدليل المشترى مجاناً عند إصدارها','تحميل فوري بعد الدفع'].map((f,i)=>(
@@ -280,7 +260,7 @@ export default async function HomePage() {
         <h2 style={{fontSize:'clamp(24px,5vw,34px)',fontWeight:900,color:'#fff',marginBottom:10}}>{settings.final_cta_title}</h2>
         <p style={{fontSize:16,color:'rgba(255,255,255,0.8)',marginBottom:32}}>{settings.final_cta_subtitle}</p>
         <Link href="/checkout" style={{background:'#fff',color:P,display:'inline-block',maxWidth:'100%',fontSize:'clamp(14px,3.5vw,18px)',fontWeight:900,padding:'16px clamp(20px,6vw,40px)',borderRadius:16,textDecoration:'none'}}>
-          {settings.final_cta_button_text} — {settings.product_price} د.ك
+          {settings.final_cta_button_text} — {arabicNumber(settings.product_price)} د.ك
         </Link>
         <div style={{display:'flex',gap:24,justifyContent:'center',marginTop:16,flexWrap:'wrap'}}>
           {[
@@ -295,7 +275,9 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="purchase-access-note"><h2>شلون تشترين وترجعين لدليلج؟</h2><p>تقدرين تشترين بإيميلج بدون إنشاء حساب مسبق. بعد تأكيد الدفع يتاح التحميل وينرسل رابط الاستلام للإيميل نفسه. إذا عندج حساب، ادخلي «مكتبتي» لمراجعة مشترياتج المرتبطة بالحساب.</p><Link href="/library">مكتبتي ←</Link><Link href="/refund">سياسة الاستلام والاسترجاع ←</Link></section>
       </main>
+      <MobilePurchaseBar price={settings.product_price} whatsapp={settings.whatsapp} />
       <Footer settings={settings} showCta={false} />
     </div>
   )
