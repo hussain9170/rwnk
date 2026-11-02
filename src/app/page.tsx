@@ -15,6 +15,7 @@ import { SITE_URL, publicMetadata, jsonLd } from '@/lib/seo'
 import { GUIDES } from '@/lib/guides'
 import { MobilePurchaseBar } from '@/components/sections/MobilePurchaseBar'
 import { arabicNumber } from '@/lib/display'
+import { PaymentMarks } from '@/components/ui/PaymentMarks'
 import { ProductFacts } from '@/components/sections/ProductFacts'
 
 // Render each request so price/settings/language availability stay fresh.
@@ -79,18 +80,20 @@ export default async function HomePage() {
           <p className="hero-description" style={{fontSize:16,color:T2,lineHeight:1.75,marginBottom:24,maxWidth:460}}>
             {settings.hero_subtitle}
           </p>
-          <p className="hero-product-summary" style={{fontSize:15,color:T2,lineHeight:1.8,marginBottom:18}}>٦٦ مهمة بخطوات واضحة · PDF · لغة واحدة تختارينها · {arabicNumber(settings.product_price)} د.ك</p>
+          <p className="hero-product-summary" style={{fontSize:15,color:T2,lineHeight:1.8,marginBottom:18}}>٦٦ مهمة بخطوات واضحة · PDF · لغة واحدة تختارينها · {arabicNumber(settings.product_price)} د.ك</p>
           <div className="hero-cta-row" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:12,marginBottom:20}}>
             <Link id="hero-buy" href="/checkout" style={{background:P,color:'#fff',display:'inline-flex',alignItems:'center',gap:8,fontSize:'clamp(15px,3vw,18px)',fontWeight:900,padding:'17px clamp(24px,5vw,32px)',borderRadius:16,textDecoration:'none',boxShadow:'0 4px 20px rgba(103,71,178,.35)'}}>
-              {settings.hero_cta_text} — {arabicNumber(settings.product_price)} د.ك
+              {settings.hero_cta_text} — {arabicNumber(settings.product_price)} د.ك
             </Link>
             <a href="#preview-heading" style={{color:P,display:'inline-flex',alignItems:'center',gap:6,fontSize:14,fontWeight:800,padding:'12px 6px',textDecoration:'none'}}>
               شوفي صفحات من الدليل ←
             </a>
           </div>
+          <PaymentMarks />
+          <div className="hero-languages" aria-label="اختاري لغة الدليل">{languages.map(l => <Link key={l.language_code} href={`/checkout?lang=${encodeURIComponent(l.language_code)}`} lang={l.language_code}>{({ar:'العربية',en:'English',ur:'اردو',ne:'नेपाली',si:'සිංහල'} as Record<string,string>)[l.language_code] ?? l.name_ar}</Link>)}</div>
           <div className="hero-price-row" style={{display:'flex',alignItems:'baseline',gap:8,marginBottom:18}}>
-            <span style={{fontSize:15,color:T3,textDecoration:'line-through'}}>{arabicNumber(settings.product_original_price)} د.ك</span>
-            <span style={{fontSize:18,fontWeight:900,color:P}}>{arabicNumber(settings.product_price)} د.ك</span>
+            <span style={{fontSize:15,color:T3,textDecoration:'line-through'}}>{arabicNumber(settings.product_original_price)} د.ك</span>
+            <span style={{fontSize:18,fontWeight:900,color:P}}>{arabicNumber(settings.product_price)} د.ك</span>
             <span style={{fontSize:12,fontWeight:700,color:'#0F6E56',background:'#E1F5EE',padding:'3px 10px',borderRadius:999}}>عرض الإطلاق</span>
           </div>
           <div className="hero-trust-row" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:'8px 20px',fontSize:14,color:T3}}>
@@ -143,7 +146,7 @@ export default async function HomePage() {
       <span id="features" aria-hidden="true" />
 
       {/* ── STEPS ── */}
-      <div id="steps" style={{background:'#FAFAFA',borderTop:`1px solid ${BR}`,borderBottom:`1px solid ${BR}`}}>
+      <div id="steps" className="compact-steps" style={{background:'#FAFAFA',borderTop:`1px solid ${BR}`,borderBottom:`1px solid ${BR}`}}>
         <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
           <div style={{fontSize:11,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:8}}>كيف تعمل</div>
           <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:36}}>٣ خطوات وتبدين</h2>
@@ -153,7 +156,7 @@ export default async function HomePage() {
               {n:'٢',title:'ابدئي التدريب',desc:'اطبعيه أو شاركيه مع العاملة في منزلك، وراجعا المهام معاً'},
               {n:'٣',title:'تابعي الروتين',desc:'استخدمي القوائم والجداول للمتابعة، وعدّلي الروتين حسب احتياج منزلك'},
             ].map((s,i)=>(
-              <div key={i} style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:20,padding:28,textAlign:'center'}}>
+              <div className="compact-step" key={i} style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:20,padding:28,textAlign:'center'}}>
                 <div style={{width:48,height:48,borderRadius:'50%',background:PL,color:P,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:900,margin:'0 auto 16px',border:`1px solid ${BR}`}}>{s.n}</div>
                 <div style={{fontSize:15,fontWeight:900,marginBottom:8}}>{s.title}</div>
                 <div style={{fontSize:13,color:T3,lineHeight:1.6}}>{s.desc}</div>
@@ -162,16 +165,6 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
-
-      {/* ── CONTENTS ── */}
-      <section id="content" style={{background:'#FAFAFA',borderBottom:`1px solid ${BR}`}}>
-        <span id="compare" aria-hidden="true" />
-        <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
-          <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:12}}>{settings.product_name}</h2>
-          <p style={{color:T2,lineHeight:1.8,marginBottom:24}}>مرجع ترجعين له وقت التدريب والمتابعة، على الجهاز أو مطبوع داخل المنزل.</p>
-          <ProductFacts settings={settings} languages={languages} />
-        </div>
-      </section>
 
       {/* ── TESTIMONIALS ── (hidden by default — toggle in Admin ▸ Content) */}
       {settings.testimonials_visible && testimonials.length > 0 && (
@@ -212,9 +205,9 @@ export default async function HomePage() {
         <p style={{fontSize:15,color:T2,marginBottom:36}}>اختاري لغة واحدة، واستلمي الدليل بعد تأكيد الدفع</p>
         <div style={{maxWidth:380,margin:'0 auto',background:'#fff',border:`2px solid ${P}`,borderRadius:24,padding:'clamp(28px,7vw,36px) clamp(22px,6vw,32px)',position:'relative'}}>
           <div style={{position:'absolute',top:18,left:18,background:'#E1F5EE',color:'#0F6E56',fontSize:11,fontWeight:900,padding:'4px 14px',borderRadius:999}}>عرض الإطلاق</div>
-          <div style={{fontSize:15,color:T3,textDecoration:'line-through',marginBottom:4}}>{arabicNumber(settings.product_original_price)} دينار</div>
+          <div style={{fontSize:15,color:T3,textDecoration:'line-through',marginBottom:4}}>{arabicNumber(settings.product_original_price)} د.ك</div>
           <div style={{fontSize:'clamp(38px,10vw,52px)',fontWeight:900,color:P,letterSpacing:-2,lineHeight:1,marginBottom:4}}>
-            {arabicNumber(settings.product_price)} <span style={{fontSize:18,fontWeight:400,color:T3,letterSpacing:'normal'}}>دينار كويتي</span>
+            {arabicNumber(settings.product_price)} <span style={{fontSize:18,fontWeight:400,color:T3,letterSpacing:'normal'}}>د.ك</span>
           </div>
           <div style={{fontSize:13,color:T3,marginBottom:24}}>دفعة واحدة · بدون اشتراك شهري</div>
           {['نسخة الدليل PDF باللغة المختارة','قوائم التفتيش للطباعة','الجداول اليومية والأسبوعية','تحديثات الدليل المشترى مجاناً عند إصدارها','تحميل فوري بعد الدفع'].map((f,i)=>(
@@ -225,27 +218,23 @@ export default async function HomePage() {
           <Link href="/checkout" style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',minHeight:52,height:'auto',padding:'14px 12px',background:P,color:'#fff',borderRadius:12,fontSize:15,fontWeight:900,textDecoration:'none',marginTop:8,boxShadow:'0 2px 12px rgba(103,71,178,.28)',textAlign:'center'}}>
             {settings.pricing_cta_text}
           </Link>
+          <PaymentMarks />
         </div>
       </div>
 
       <section style={{maxWidth:1000,margin:'0 auto',padding:'48px clamp(20px,6vw,40px)'}} aria-labelledby="guides-heading">
         <h2 id="guides-heading" style={{fontSize:'clamp(22px,4.5vw,30px)',marginBottom:12}}>نصائح لتدريب العاملة وتنظيم تنظيف البيت</h2>
         <p style={{fontSize:16,color:T2,lineHeight:1.8}}>ابدئي بخطوات واضحة تناسب بيتك، من شرح المهمة إلى جدول التنظيف ومراجعة النتيجة.</p>
-        <div className="guide-cards">{GUIDES.map(guide=><article className="guide-card" key={guide.slug}><h3 style={{fontSize:19,lineHeight:1.6,marginBottom:12}}><Link href={`/guides/${guide.slug}`}>{guide.title}</Link></h3><p style={{fontSize:15,lineHeight:1.8,color:T2}}>{guide.description}</p><Link className="guide-link" href={`/guides/${guide.slug}`}>اقرئي الخطوات ←</Link></article>)}</div>
+        <div className="guide-cards">{GUIDES.map(guide=><article className="guide-card whole-card" key={guide.slug}><h3 style={{fontSize:19,lineHeight:1.6,marginBottom:12}}><Link href={`/guides/${guide.slug}`}>{guide.title}</Link></h3><p style={{fontSize:15,lineHeight:1.8,color:T2}}>{guide.description}</p><Link className="guide-link" href={`/guides/${guide.slug}`}>اقرئي الخطوات ←</Link></article>)}</div>
         <Link href="/guides" className="guide-link">كل النصائح المنزلية ←</Link>
       </section>
 
       {/* ── FAQ ── */}
       <div id="faq" style={{background:'#FAFAFA',borderTop:`1px solid ${BR}`}}>
         <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
-          <h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:32}}>أسئلة شائعة</h2>
+          <span id="content" /><span id="compare" /><h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:20}}>عن الدليل والشراء</h2>
           <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:640}}>
-            {faqs.slice(0,4).map((faq)=>(
-              <div key={faq.id} style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:14,padding:'16px 20px'}}>
-                <div style={{fontSize:14,fontWeight:900,color:T1,marginBottom:8}}>{faq.question}</div>
-                <div style={{fontSize:13,color:T2,lineHeight:1.65}}>{faq.answer}</div>
-              </div>
-            ))}
+            <ProductFacts settings={settings} languages={languages} faqs={faqs} compact />
           </div>
           <div style={{maxWidth:640,marginTop:20}}>
             <Link href="/faq" style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:14,fontWeight:900,color:P,textDecoration:'none',background:'#fff',border:`1px solid ${BR}`,padding:'12px 22px',borderRadius:12}}>
@@ -260,7 +249,7 @@ export default async function HomePage() {
         <h2 style={{fontSize:'clamp(24px,5vw,34px)',fontWeight:900,color:'#fff',marginBottom:10}}>{settings.final_cta_title}</h2>
         <p style={{fontSize:16,color:'rgba(255,255,255,0.8)',marginBottom:32}}>{settings.final_cta_subtitle}</p>
         <Link href="/checkout" style={{background:'#fff',color:P,display:'inline-block',maxWidth:'100%',fontSize:'clamp(14px,3.5vw,18px)',fontWeight:900,padding:'16px clamp(20px,6vw,40px)',borderRadius:16,textDecoration:'none'}}>
-          {settings.final_cta_button_text} — {arabicNumber(settings.product_price)} د.ك
+          {settings.final_cta_button_text} — {arabicNumber(settings.product_price)} د.ك
         </Link>
         <div style={{display:'flex',gap:24,justifyContent:'center',marginTop:16,flexWrap:'wrap'}}>
           {[
@@ -275,7 +264,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="purchase-access-note"><h2>شلون تشترين وترجعين لدليلج؟</h2><p>تقدرين تشترين بإيميلج بدون إنشاء حساب مسبق. بعد تأكيد الدفع يتاح التحميل وينرسل رابط الاستلام للإيميل نفسه. إذا عندج حساب، ادخلي «مكتبتي» لمراجعة مشترياتج المرتبطة بالحساب.</p><Link href="/library">مكتبتي ←</Link><Link href="/refund">سياسة الاستلام والاسترجاع ←</Link></section>
+
       </main>
       <MobilePurchaseBar price={settings.product_price} whatsapp={settings.whatsapp} />
       <Footer settings={settings} showCta={false} />

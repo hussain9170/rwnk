@@ -26,12 +26,12 @@ const ERROR_MESSAGES: Record<string, string> = {
   callback_error:   'حدث خطأ أثناء تأكيد الدفع. إذا تم خصم المبلغ تواصلي معنا فوراً.',
 }
 
-export default function CheckoutForm({ settings, languages }: { settings: StoreSettings; languages: BookLanguage[] }) {
+export default function CheckoutForm({ settings, languages, initialLanguage = '' }: { settings: StoreSettings; languages: BookLanguage[]; initialLanguage?: string }) {
   const pm = 'gateway'
-  const [bookLanguage,setBookLanguage]=useState('')
+  const [bookLanguage,setBookLanguage]=useState(languages.some(l => l.language_code === initialLanguage) ? initialLanguage : '')
   const [languageError,setLanguageError]=useState('')
   const [email,setEmail]=useState('')
-  const [customerName,setCustomerName]=useState('')
+  const customerName = ''
   const [loading,setLoading]=useState(false)
   const [error,setError]=useState('')
   const [banner,setBanner]=useState('')
@@ -94,7 +94,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
   }
 
   const price = settings.product_price
-  const priceLabel = `${arabicNumber(price)} د.ك`
+  const priceLabel = `${arabicNumber(price)} د.ك`
 
   return (
     <main><form noValidate onSubmit={event => { event.preventDefault(); void handlePay() }} className="checkout-shell" style={{width:'100%',maxWidth:1120,margin:'0 auto',minHeight:'100vh',display:'grid',gridTemplateColumns:'minmax(0,1fr) 350px',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",direction:'rtl',background:'#fff'}}>
@@ -105,7 +105,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
           </Link>
           <span style={{fontSize:12,color:T3}}>دفع آمن ومشفّر</span>
         </div>
-        <h1 style={{fontSize:24,fontWeight:900,marginBottom:4,color:T1}}>إتمام الشراء</h1>
+        <h1 style={{fontSize:24,fontWeight:900,marginBottom:4,color:T1}}>إتمام الشراء</h1><div className="checkout-brief">دليل رونق · {priceLabel}<span style={{display:'block',fontSize:13}}>نسخة PDF بلغة واحدة · دفعة واحدة</span></div>
         <p style={{fontSize:15,color:T2,marginBottom:24}}>اختاري اللغة، أدخلي بريدج، وكمّلي الدفع.</p>
 
         {banner && (
@@ -115,9 +115,9 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
         )}
 
         <div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:16,padding:20,marginBottom:14}}>
-          <div style={{fontSize:12,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:14}}>لغة الكتاب</div>
+          <div style={{fontSize:12,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:14}}>لغة الدليل</div>
           <p style={{fontSize:14,color:T2,lineHeight:1.8,marginBottom:14}}>يشمل الطلب نسخة واحدة باللغة المختارة بسعر {priceLabel}، وليس جميع اللغات.</p>
-          <div className="checkout-lang-grid" role="radiogroup" aria-label="لغة الكتاب" aria-required="true" aria-invalid={!!languageError} aria-describedby={languageError?'checkout-language-error':undefined} style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:8}}>
+          <div className="checkout-lang-grid" role="radiogroup" aria-label="لغة الدليل" aria-required="true" aria-invalid={!!languageError} aria-describedby={languageError?'checkout-language-error':undefined} style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:8}}>
             {languages.map((l,index)=>(
               <button key={l.language_code} type="button" role="radio" aria-checked={bookLanguage===l.language_code} tabIndex={bookLanguage===l.language_code||(!bookLanguage&&index===0)?0:-1} onKeyDown={e=>{
                 const keys=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End']; if(!keys.includes(e.key)) return; e.preventDefault();
@@ -144,13 +144,6 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
           <p style={{fontSize:14,color:T2,lineHeight:1.8,marginTop:8}}>بعد تأكيد الدفع، يوصلك رابط الدليل على بريدج. وتقدرين تدخلين مكتبتج بنفس البريد.</p>
           {error && <p id="checkout-email-error" role="alert" style={{fontSize:12,color:'#A32D2D',marginTop:8,padding:'8px 12px',background:'#FEF2F2',borderRadius:8}}>{error}</p>}
 
-          <label htmlFor="checkout-name" style={{display:'block',fontSize:12,fontWeight:900,color:P,textTransform:'uppercase',margin:'16px 0 14px'}}>الاسم <span style={{fontWeight:400,color:T3,textTransform:'none'}}>(اختياري)</span></label>
-          <input id="checkout-name" type="text" placeholder="اسمك الكامل" autoComplete="name"
-            value={customerName} onChange={e=>setCustomerName(e.target.value)} onFocus={focus} onBlur={blur}
-            style={inp}/>
-        </div>
-
-        <div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:16,padding:20}}>
           <div style={{fontSize:14,fontWeight:900,color:P,marginBottom:14}}>وسائل الدفع المتاحة</div>
           <div className="checkout-pm-grid" aria-label="وسائل الدفع المتاحة لدى البوابة" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:24,marginBottom:12}}>
             {PM.map(m=>(
@@ -170,13 +163,13 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
       </div>
 
       <div className="checkout-col-summary" style={{background:'#FAFAFA',borderRight:`1px solid ${BR}`,display:'flex',flexDirection:'column',padding:'clamp(20px,5vw,28px)',overflowY:'auto'}}>
-        <div style={{fontSize:14,fontWeight:900,color:T1,marginBottom:18}}>ملخص الطلب</div>
+        <details className="checkout-details"><summary>تفاصيل الدليل واللغة المختارة</summary>        <div style={{fontSize:14,fontWeight:900,color:T1,marginBottom:18}}>دليل رونق · {priceLabel}</div>
         <div style={{display:'flex',alignItems:'center',gap:12,padding:12,background:PL,borderRadius:12,marginBottom:18}}>
           {bookLanguage === 'ar' ? <Image src="/rwnak-guide-cover-ar.webp" alt="غلاف النسخة العربية من دليل رونق" width={46} height={66} sizes="46px" style={{width:46,height:66,borderRadius:5,flexShrink:0,objectFit:'cover'}} /> : <div className="neutral-guide-cover" aria-label="دليل رونق الرقمي"><span>رَوْنَق</span><small>PDF</small></div>}
           <div>
             <div style={{fontSize:13,fontWeight:900,color:T1,marginBottom:2}}>{settings.product_name}</div>
             <div style={{fontSize:12,color:T3,display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
-              دليل التنظيف — PDF
+              دليل رونق لتدريب العاملة وتنظيم البيت
               <span style={{display:'inline-flex',alignItems:'center',gap:3,fontWeight:700,color:P,background:'#fff',padding:'1px 7px',borderRadius:999,border:`1px solid ${BR}`}}>
                 {languages.find(l=>l.language_code===bookLanguage)?.name_ar ?? 'اختاري لغة الدليل'}
               </span>
@@ -185,11 +178,12 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
           </div>
         </div>
         <p style={{fontSize:14,color:T2,lineHeight:1.8,marginBottom:18}}>تقدرين تحمّلين نفس ملف الدليل حتى {arabicNumber(settings.downloads_limit)} مرات إجمالاً، باللغة اللي اخترتيها. الطلب يشمل نسخة بلغة واحدة.</p>
+        </details>
         <div style={{borderTop:`1px solid ${BR}`,paddingTop:14,marginBottom:14}}>
           <div style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:9}}>
-            <span style={{color:T3}}>سعر الكتاب</span>
+            <span style={{color:T3}}>سعر الدليل</span>
             <span style={{display:'flex',alignItems:'baseline',gap:6}}>
-              <span style={{fontWeight:700,color:T3,textDecoration:'line-through',fontSize:12}}>{arabicNumber(settings.product_original_price)} د.ك</span>
+              <span style={{fontWeight:700,color:T3,textDecoration:'line-through',fontSize:12}}>{arabicNumber(settings.product_original_price)} د.ك</span>
               <span style={{fontWeight:900,color:P}}>{priceLabel}</span>
             </span>
           </div>
@@ -197,7 +191,7 @@ export default function CheckoutForm({ settings, languages }: { settings: StoreS
         </div>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 0',borderTop:`1px solid ${BR}`,marginBottom:20}}>
           <span style={{fontSize:14,fontWeight:900,color:T1}}>الإجمالي</span>
-          <span style={{fontSize:26,fontWeight:900,color:P,letterSpacing:-0.5}}>{arabicNumber(price)} <span style={{fontSize:13,fontWeight:400,color:T3,letterSpacing:'normal'}}>د.ك</span></span>
+          <span style={{fontSize:26,fontWeight:900,color:P,letterSpacing:-0.5}}>{arabicNumber(price)} <span style={{fontSize:13,fontWeight:400,color:T3,letterSpacing:'normal'}}>د.ك</span></span>
         </div>
         <p aria-live="polite" style={{fontSize:15,fontWeight:800,color:P,background:PL,borderRadius:10,padding:12,marginBottom:16}}>{bookLanguage ? `نسختج: ${languages.find(l=>l.language_code===bookLanguage)?.name_ar} فقط` : 'اختاري لغة واحدة من الخيارات أعلاه'}</p>
         <div ref={policyField}><PolicyConsent checked={policyAccepted} onChange={value => { setPolicyAccepted(value); setPolicyError('') }} purchase /></div>

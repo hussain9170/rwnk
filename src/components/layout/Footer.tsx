@@ -6,7 +6,7 @@ import { NewsletterSignup } from '@/components/ui/NewsletterSignup'
 import { C } from '@/lib/theme'
 import { DEFAULT_SETTINGS, type StoreSettings } from '@/lib/store-settings'
 import {
-  IconBrandInstagram, IconBrandTwitter, IconBrandSnapchat,
+  IconBrandInstagram, IconBrandX, IconBrandSnapchat,
   IconShieldCheck, IconBolt,
 } from '@tabler/icons-react'
 
@@ -19,7 +19,7 @@ function buildLinks() {
       { label: 'الأسئلة الشائعة', href: '/#faq'       },
     ],
     'حسابي': [
-      { label: 'شراء الكتاب',      href: '/checkout'  },
+      { label: 'شراء الدليل',      href: '/checkout'  },
       { label: 'مكتبتي',     href: '/library'     },
     ],
     'الدعم': [
@@ -37,7 +37,7 @@ function buildSocial(S: StoreSettings) {
   return [
     { icon: IconBrandInstagram, href: `https://instagram.com/${S.instagram.replace('@','')}`, label: 'انستغرام' },
     { icon: IconBrandSnapchat, href: 'https://www.snapchat.com/add/rwnak.official', label: 'سناب شات' },
-    { icon: IconBrandTwitter,   href: `https://x.com/${S.twitter.replace('@','')}`,    label: 'إكس'    },
+    { icon: IconBrandX,   href: `https://x.com/${S.twitter.replace('@','')}`,    label: 'إكس'    },
   ]
 }
 
@@ -66,7 +66,7 @@ export default function Footer({ settings, showCta = true }: { settings?: StoreS
             padding: '14px 28px', borderRadius: 12, display: 'inline-block',
             boxShadow: '0 4px 20px rgba(103,71,178,.5)', flexShrink: 0, textDecoration: 'none',
           }}>
-            اشتري الآن — {arabicNumber(S.product_price)} د.ك
+            اشتري الآن — {arabicNumber(S.product_price)} د.ك
           </Link>
         </div>
       </div>

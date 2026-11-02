@@ -76,8 +76,8 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 
 export async function getFaqs(): Promise<Faq[]> {
   try {
-    return await getPublicList<Faq>('faqs')
-  } catch { return FALLBACK_FAQS }
+    return (await getPublicList<Faq>('faqs')).map(f => ({ ...f, question: f.question.replace(/الكتاب/g, 'الدليل'), answer: f.answer.replace(/الكتاب/g, 'الدليل') }))
+  } catch { return FALLBACK_FAQS.map(f => ({ ...f, question: f.question.replace(/الكتاب/g, 'الدليل'), answer: f.answer.replace(/الكتاب/g, 'الدليل') })) }
 }
 
 export async function getFeatures(): Promise<Feature[]> {

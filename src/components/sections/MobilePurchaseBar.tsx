@@ -26,5 +26,5 @@ export function MobilePurchaseBar({ price, whatsapp }: { price: number; whatsapp
   }, [])
   const support = supportWhatsapp(whatsapp)
   if (!visible) return null
-  return <aside className="mobile-purchase-bar" aria-label="شراء دليل رونق"><div><strong>{arabicNumber(price)} د.ك</strong><small>دفعة واحدة</small></div><Link href="/checkout" className="mobile-buy">اشتري الدليل</Link>{support && <a href={support} target="_blank" rel="noopener noreferrer" className="mobile-support" aria-label="واتساب للدعم">الدعم</a>}</aside>
+  return <aside className="mobile-purchase-bar" aria-label="شراء دليل رونق"><div><strong>{arabicNumber(price)} د.ك</strong><small>دفعة واحدة</small></div><Link href="/checkout" className="mobile-buy">اشتري الدليل</Link>{support && <a href={support} target="_blank" rel="noopener noreferrer" className="mobile-support" aria-label="واتساب للدعم">الدعم</a>}</aside>
 }

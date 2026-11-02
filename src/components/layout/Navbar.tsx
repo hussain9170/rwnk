@@ -146,7 +146,7 @@ export default function Navbar({ rightContent }: NavbarProps) {
               textAlign: 'center', fontSize: 14, fontWeight: 700, color: C.text2,
               padding: '13px 14px', borderRadius: 11, border: `1px solid ${C.border}`, textDecoration: 'none',
             }}>
-              دخول العملاء
+              مكتبتي / تسجيل الدخول
             </Link>
             <Link href="/checkout" onClick={() => setOpen(false)} style={{
               textAlign: 'center', background: C.primary, color: '#fff', fontSize: 14, fontWeight: 900,
