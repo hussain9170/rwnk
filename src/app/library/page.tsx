@@ -6,8 +6,7 @@ import Navbar from '@/components/layout/Navbar'
 import { supabase } from '@/lib/supabase'
 import { signOut } from '@/lib/auth'
 import { generateDownloadTokenSafe } from '@/lib/purchases'
-const P='#6747B2',PL='#EDE8FF',T1='#1A1228',T2='#4A4060',T3='#9890AA',BR='#EDE8F5'
-const CHAPTERS=[{n:1,title:'أسس التنظيف الاحترافي',status:'done'},{n:2,title:'معايير كل غرفة',status:'done'},{n:3,title:'المنتجات والأدوات',status:'done'},{n:4,title:'الجداول والقوائم',status:'done'},{n:5,title:'التعامل مع الحالات الخاصة',status:'new'}]
+const P='#6747B2',PL='#EDE8FF',T1='#1A1228',T2='#4A4060',T3='#6B617E',BR='#EDE8F5'
 export default function LibraryPage() {
   const [library,setLibrary]=useState<any[]>([])
   const [loading,setLoading]=useState(true)
@@ -77,7 +76,7 @@ export default function LibraryPage() {
             
             <h2 style={{fontSize:18,fontWeight:900,color:T1,marginBottom:8}}>مكتبتك فارغة</h2>
             <p style={{fontSize:13,color:T3,marginBottom:24}}>لم تشتري أي منتج بعد</p>
-            <Link href="/checkout" style={{background:P,color:'#fff',fontSize:14,fontWeight:900,padding:'12px 28px',borderRadius:12,textDecoration:'none',display:'inline-block'}}>اشترِ كتاب رَوْنَق الآن</Link>
+            <Link href="/checkout" style={{background:P,color:'#fff',fontSize:14,fontWeight:900,padding:'12px 28px',borderRadius:12,textDecoration:'none',display:'inline-block'}}>اشتري دليل رونق</Link>
           </div>:library.map((item:any)=>{
             const dlLeft=item.downloads_remaining??(item.downloads_limit??5)-(item.downloads_used??0)
             const dlUsed=item.downloads_used??0,dlLimit=item.downloads_limit??5
@@ -100,7 +99,7 @@ export default function LibraryPage() {
                     <span style={{fontSize:10,fontWeight:900,color:'#fff'}}>رَوْنَق</span>
                   </div>
                   <div style={{flex:'1 1 200px',minWidth:0}}>
-                    <div style={{fontSize:17,fontWeight:900,marginBottom:4,color:T1}}>{item.product_name??'كتاب رَوْنَق — دليل التنظيف الاحترافي'}</div>
+                    <div style={{fontSize:17,fontWeight:900,marginBottom:4,color:T1}}>{item.product_name??'دليل رونق لتدريب العاملة وتنظيم البيت'}</div>
                     <div style={{fontSize:12,color:T3,marginBottom:10}}>الإصدار {item.product_version??'1.0'} · PDF</div>
                     <div style={{marginBottom:8}}>
                       <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:T3,marginBottom:5}}>
@@ -125,17 +124,8 @@ export default function LibraryPage() {
                   </div>
                 </div>
                 <div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:20,padding:24,marginBottom:20}}>
-                  <div style={{fontSize:14,fontWeight:900,color:T1,marginBottom:3}}>محتوى الكتاب</div>
-                  <div style={{fontSize:12,color:T3,marginBottom:16}}>5 فصول · قوائم وجداول جاهزة</div>
-                  <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                    {CHAPTERS.map(ch=>(
-                      <div key={ch.n} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',borderRadius:10,background:'#FAFAFA',border:`1px solid ${BR}`}}>
-                        <div style={{width:28,height:28,borderRadius:8,background:P,color:'#fff',fontSize:12,fontWeight:900,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{ch.n}</div>
-                        <span style={{fontSize:13,flex:1,color:T1}}>{ch.title}</span>
-                        <span style={{fontSize:10,fontWeight:700,padding:'3px 10px',borderRadius:999,background:ch.status==='done'?'#E1F5EE':PL,color:ch.status==='done'?'#085041':P}}>{ch.status==='done'?'متاح':'تحديث'}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <div style={{fontSize:16,fontWeight:900,color:T1,marginBottom:10}}>عن دليلج</div>
+                  <p style={{fontSize:15,color:T2,lineHeight:1.9}}>٦٦ مهمة بخطوات تنظيف غرفة بغرفة، ومعاها قوائم متابعة وجداول يومية وأسبوعية وشهرية. مرجعج الكامل داخل ملف PDF باللغة اللي اخترتيها.</p>
                 </div>
               </div>
             )

@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { BrandLogo } from '@/components/ui/BrandLogo'
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import { C } from '@/lib/theme'
 import { IconMenu2, IconX } from '@tabler/icons-react'
 
@@ -18,6 +18,8 @@ const NAV_LINKS = [
 export default function Navbar({ rightContent }: NavbarProps) {
   const [hov, setHov] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
+  const nav = useRef<HTMLElement>(null)
+  const panel = useRef<HTMLDivElement>(null)
 
   // Lock body scroll while the mobile menu is open. Closing on navigation
   // is handled by each link's own onClick — no effect needed for that half.
@@ -25,22 +27,44 @@ export default function Navbar({ rightContent }: NavbarProps) {
     if (!open) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    const background = Array.from(document.querySelectorAll<HTMLElement>('main, footer')).filter(el => !el.contains(nav.current))
+    const previousInert = background.map(el => el.inert)
+    background.forEach(el => { el.inert = true })
+    const focusable = () => [...Array.from(nav.current?.querySelectorAll<HTMLElement>('a[href], button') ?? []), ...Array.from(panel.current?.querySelectorAll<HTMLElement>('a[href], button') ?? [])].filter(el => el.getClientRects().length && !el.hasAttribute('disabled'))
+    panel.current?.querySelector<HTMLElement>('a[href]')?.focus()
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setOpen(false)
         document.getElementById('mobile-menu-toggle')?.focus()
       }
+      if (event.key === 'Tab') {
+        const targets = focusable()
+        const first = targets[0], last = targets[targets.length - 1]
+        if (!first || !last) return
+        if (event.shiftKey && (document.activeElement === first || !targets.includes(document.activeElement as HTMLElement))) { event.preventDefault(); last.focus() }
+        else if (!event.shiftKey && (document.activeElement === last || !targets.includes(document.activeElement as HTMLElement))) { event.preventDefault(); first.focus() }
+      }
     }
+    const keepFocus = (event: FocusEvent) => {
+      if (event.target instanceof Node && !nav.current?.contains(event.target) && !panel.current?.contains(event.target)) panel.current?.querySelector<HTMLElement>('a[href]')?.focus()
+    }
+    const desktop = window.matchMedia('(min-width:1101px)')
+    const closeOnDesktop = () => { if (desktop.matches) setOpen(false) }
+    desktop.addEventListener('change', closeOnDesktop)
     window.addEventListener('keydown', closeOnEscape)
+    document.addEventListener('focusin', keepFocus)
     return () => {
       document.body.style.overflow = prev
+      background.forEach((el, i) => { el.inert = previousInert[i] })
+      desktop.removeEventListener('change', closeOnDesktop)
       window.removeEventListener('keydown', closeOnEscape)
+      document.removeEventListener('focusin', keepFocus)
     }
   }, [open])
 
   return (
     <>
-    <nav className="navbar-root" style={{
+    <nav ref={nav} className="navbar-root" style={{
       position: 'fixed', top: 0, left: 0, right: 0, height: 68, zIndex: 100,
       background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(20px)',
       borderBottom: `1px solid ${C.border}`,
@@ -131,7 +155,7 @@ export default function Navbar({ rightContent }: NavbarProps) {
         panel's top/bottom offsets resolved against nav's own 60px box
         instead of the viewport and collapsed to 0 height. */}
     {!rightContent && open && (
-      <div id="mobile-navigation" className="navbar-mobile-panel" aria-label="قائمة التنقل">
+      <div ref={panel} id="mobile-navigation" className="navbar-mobile-panel" role="navigation" aria-label="قائمة التنقل">
         <div style={{ display: 'flex', flexDirection: 'column', padding: '18px 20px', gap: 4 }}>
           {NAV_LINKS.map(link => (
             <a key={link.href} href={link.href} onClick={() => setOpen(false)} style={{

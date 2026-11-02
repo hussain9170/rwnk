@@ -15,8 +15,10 @@ for(const path of ['/reset-password','/account','/library?tab=books','/admin/inv
 async function callback(next, exchangeError=false) {
  const route=moduleFor('src/app/auth/callback/route.ts',{
   'next/server':{NextResponse:{redirect:url=>({url})}}, '@/lib/auth-redirect':{safeAuthPath},
-  'next/headers':{cookies:async()=>({getAll:()=>[],set:()=>{}})},
-  '@supabase/ssr':{createServerClient:()=>({auth:{exchangeCodeForSession:async()=>({error:exchangeError})}})}
+  '@/lib/policy-consent':{POLICY_COOKIE:'test-policy'},
+  '@/lib/newsletter':{newsletterDb:()=>{throw Error('No receipt: database must not be consulted')}},
+  'next/headers':{cookies:async()=>({getAll:()=>[],get:()=>undefined,set:()=>{}})},
+  '@supabase/ssr':{createServerClient:()=>({auth:{exchangeCodeForSession:async()=>({data:{user:{id:'buyer'}},error:exchangeError})}})}
  })
  return route.GET({url:'https://rwnak.test/auth/callback?code=fake&next='+encodeURIComponent(next)})
 }

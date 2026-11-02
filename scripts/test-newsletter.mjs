@@ -24,9 +24,9 @@ const db={
 }
 function load(path, mocks={}, fetchMock=async()=>{throw Error('Unexpected network')}) {
  const source=ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText
- const module={exports:{}}
- vm.runInNewContext(source,{module,exports:module.exports,require:name=>name in mocks?mocks[name]:require(name),process:{env:{RESEND_API_KEY:'fake-test-key',EMAIL_FROM:'test@example.invalid'}},fetch:fetchMock,AbortSignal,URL,console,Date,Buffer},{filename:path})
- return module.exports
+ const testModule={exports:{}}
+ vm.runInNewContext(source,{module:testModule,exports:testModule.exports,require:name=>name in mocks?mocks[name]:require(name),process:{env:{RESEND_API_KEY:'fake-test-key',EMAIL_FROM:'test@example.invalid'}},fetch:fetchMock,AbortSignal,URL,console,Date,Buffer},{filename:path})
+ return testModule.exports
 }
 const provider=async(url,init)=>{
  calls.push({url,method:init.method})

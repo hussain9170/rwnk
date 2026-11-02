@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
 
   const focus = (e: React.FocusEvent<HTMLInputElement>) => { e.target.style.borderColor = C.primary; e.target.style.boxShadow = '0 0 0 3px rgba(103,71,178,.1)' }
   const blur = (e: React.FocusEvent<HTMLInputElement>) => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none' }
-  const inpStyle: React.CSSProperties = { width: '100%', height: 46, background: '#FAFAFA', border: `1px solid ${C.border}`, borderRadius: 11, padding: '0 14px', fontSize: 14, color: C.text1, outline: 'none', fontFamily: FONT, direction: 'ltr', transition: 'all .2s' }
+  const inpStyle: React.CSSProperties = { width: '100%', height: 46, background: '#FAFAFA', border: `1px solid ${C.border}`, borderRadius: 11, padding: '0 14px', fontSize: 16, color: C.text1, outline: 'none', fontFamily: FONT, direction: 'ltr', transition: 'all .2s' }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

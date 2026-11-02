@@ -24,11 +24,11 @@ const mockCache = {
     for (const [key, entry] of entries) if (entry.tags.includes(tag)) entries.delete(key)
   },
 }
-const module = { exports: {} }
+const testModule = { exports: {} }
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/public-content-cache.ts', 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText, {
-  module, exports: module.exports, process: { env: { NEXT_PUBLIC_SUPABASE_URL: 'https://example.invalid', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test' } },
+  module: testModule, exports: testModule.exports, process: { env: { NEXT_PUBLIC_SUPABASE_URL: 'https://example.invalid', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test' } },
   require(name) {
     if (name === 'next/cache') return mockCache
     assert.equal(name, '@supabase/supabase-js')
@@ -48,7 +48,7 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/public-content-ca
     } }
   },
 })
-const { getPublicList, invalidatePublicContent } = module.exports
+const { getPublicList, invalidatePublicContent } = testModule.exports
 assert.equal((await getPublicList('faqs'))[0].question, 'Before')
 rows.faqs[0].question = 'After'
 assert.equal((await getPublicList('faqs'))[0].question, 'Before')

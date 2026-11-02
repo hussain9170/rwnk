@@ -100,13 +100,9 @@ export const DEFAULT_SETTINGS: StoreSettings = {
 // settings write) is what makes this fast/fresh instead.
 export async function getStoreSettings(): Promise<StoreSettings> {
   try {
-    const { createClient } = await import('@supabase/supabase-js')
+    const { getPublicSupabase } = await import('./public-supabase')
     const { getSingletonRow } = await import('./db-resilience')
-    const sb = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
-    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
-    ) as any
+    const sb = getPublicSupabase()
     // store_settings must always have exactly one row, but a live incident
     // (a migration re-run's seed INSERT silently creating a second row)
     // proved a bare .single() here is a single point of failure for the

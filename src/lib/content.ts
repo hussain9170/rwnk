@@ -13,12 +13,8 @@ export function pageMetadata(page: PageContent): Metadata {
 }
 
 async function getSb() {
-  const { createClient } = await import('@supabase/supabase-js')
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
-    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
-  ) as any
+  const { getPublicSupabase } = await import('./public-supabase')
+  return getPublicSupabase()
 }
 
 // Never substitute sample reviews for customer evidence when the CMS is unavailable.

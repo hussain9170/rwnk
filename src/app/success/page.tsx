@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import { C } from '@/lib/theme'
+import { arabicNumber } from '@/lib/display'
 import { getStoreSettings, DEFAULT_SETTINGS, type StoreSettings } from '@/lib/store-settings'
 import {
   IconCircleCheck, IconDownload, IconArrowRight,
@@ -238,10 +239,10 @@ export default function SuccessPage() {
             <div style={{ background:C.primaryLight, border:`1px solid ${C.border}`, borderRadius:12, padding:'12px 16px', marginBottom:20 }}>
               {[
                 { label:'رقم الطلب',     value: info.invoice_number ?? '—' },
-                { label:'لغة الكتاب',    value: languageLabel(info) },
+                { label:'لغة الدليل',    value: languageLabel(info) },
                 { label:'تاريخ الشراء',  value: info.created_at ? new Date(info.created_at).toLocaleDateString('ar-KW', { year:'numeric', month:'long', day:'numeric' }) : '—' },
                 { label:'البريد',        value: info.email ?? '—'   },
-                { label:'المبلغ المدفوع',value: `${info.amount} ${info.currency === 'KWD' ? 'د.ك' : info.currency}`, color: C.primary },
+                { label:'المبلغ المدفوع',value: `${arabicNumber(info.amount)} ${info.currency === 'KWD' ? 'د.ك' : info.currency}`, color: C.primary },
               ].map((r,i,a) => (
                 <div key={i} style={{ display:'flex', flexWrap:'wrap', justifyContent:'space-between', gap:'2px 12px', fontSize:12, marginBottom:i<a.length-1?7:0, direction:'rtl' }}>
                   <span style={{ color:C.text3, flexShrink:0 }}>{r.label}</span>
@@ -256,7 +257,7 @@ export default function SuccessPage() {
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10, flexWrap:'wrap', gap:8 }}>
               <div style={{ display:'flex', alignItems:'center', gap:7 }}>
                 <IconFileText size={16} color={C.text2} />
-                <span style={{ fontSize:13, fontWeight:700, color:C.text1 }}>تحميل الكتاب</span>
+                <span style={{ fontSize:13, fontWeight:700, color:C.text1 }}>تحميل الدليل</span>
               </div>
               <span style={{ fontSize:11, color:C.text3, background:'#fff', border:`1px solid ${C.border}`, padding:'3px 10px', borderRadius:999 }}>
                 {dlLeft} من {info?.downloads_limit ?? 0} تحميل متبقي
@@ -275,7 +276,7 @@ export default function SuccessPage() {
               display:'flex', alignItems:'center', justifyContent:'center', gap:9, transition:'all .2s',
             }}>
               <IconDownload size={18} />
-              {dlLoad ? 'جاري التحضير...' : dlLeft<=0 ? 'استنفذتِ عدد التحميلات' : 'تحميل الكتاب الآن — PDF'}
+              {dlLoad ? 'جاري التحضير...' : dlLeft<=0 ? 'استنفذتِ عدد التحميلات' : 'تحميل الدليل الآن — PDF'}
             </button>
             {dlLeft <= 0 && (
               <p style={{ fontSize:11, color:'#A32D2D', textAlign:'center', marginTop:6 }}>تواصلي معنا لطلب تحميل إضافي</p>

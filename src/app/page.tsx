@@ -17,6 +17,7 @@ import { MobilePurchaseBar } from '@/components/sections/MobilePurchaseBar'
 import { arabicNumber } from '@/lib/display'
 import { PaymentMarks } from '@/components/ui/PaymentMarks'
 import { ProductFacts } from '@/components/sections/ProductFacts'
+import { GuideContents } from '@/components/sections/GuideContents'
 
 // Render each request so price/settings/language availability stay fresh.
 // Published CMS lists have a separate tagged data cache, expired immediately
@@ -143,7 +144,7 @@ export default async function HomePage() {
         <GuidePreviews />
       </div>
 
-      <span id="features" aria-hidden="true" />
+      <div className="guide-contents-wrap"><span id="features" aria-hidden="true" /><GuideContents /></div>
 
       {/* ── STEPS ── */}
       <div id="steps" className="compact-steps" style={{background:'#FAFAFA',borderTop:`1px solid ${BR}`,borderBottom:`1px solid ${BR}`}}>
@@ -225,16 +226,16 @@ export default async function HomePage() {
       <section style={{maxWidth:1000,margin:'0 auto',padding:'48px clamp(20px,6vw,40px)'}} aria-labelledby="guides-heading">
         <h2 id="guides-heading" style={{fontSize:'clamp(22px,4.5vw,30px)',marginBottom:12}}>نصائح لتدريب العاملة وتنظيم تنظيف البيت</h2>
         <p style={{fontSize:16,color:T2,lineHeight:1.8}}>ابدئي بخطوات واضحة تناسب بيتك، من شرح المهمة إلى جدول التنظيف ومراجعة النتيجة.</p>
-        <div className="guide-cards">{GUIDES.map(guide=><article className="guide-card whole-card" key={guide.slug}><h3 style={{fontSize:19,lineHeight:1.6,marginBottom:12}}><Link href={`/guides/${guide.slug}`}>{guide.title}</Link></h3><p style={{fontSize:15,lineHeight:1.8,color:T2}}>{guide.description}</p><Link className="guide-link" href={`/guides/${guide.slug}`}>اقرئي الخطوات ←</Link></article>)}</div>
+        <div className="guide-cards">{GUIDES.slice(0,2).map(guide=><article className="guide-card whole-card" key={guide.slug}><h3 style={{fontSize:19,lineHeight:1.6,marginBottom:12}}><Link href={`/guides/${guide.slug}`}>{guide.title}</Link></h3><p style={{fontSize:15,lineHeight:1.8,color:T2}}>{guide.description}</p><Link className="guide-link" href={`/guides/${guide.slug}`}>اقرئي الخطوات ←</Link></article>)}</div>
         <Link href="/guides" className="guide-link">كل النصائح المنزلية ←</Link>
       </section>
 
       {/* ── FAQ ── */}
       <div id="faq" style={{background:'#FAFAFA',borderTop:`1px solid ${BR}`}}>
         <div style={{maxWidth:900,margin:'0 auto',padding:'clamp(48px,9vw,72px) clamp(20px,6vw,40px)'}}>
-          <span id="content" /><span id="compare" /><h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:20}}>عن الدليل والشراء</h2>
+          <span id="compare" /><h2 style={{fontSize:'clamp(22px,4.5vw,30px)',fontWeight:900,marginBottom:20}}>عن الدليل والشراء</h2>
           <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:640}}>
-            <ProductFacts settings={settings} languages={languages} faqs={faqs} compact />
+            <ProductFacts settings={settings} languages={languages} faqs={faqs} compact includeContents={false} />
           </div>
           <div style={{maxWidth:640,marginTop:20}}>
             <Link href="/faq" style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:14,fontWeight:900,color:P,textDecoration:'none',background:'#fff',border:`1px solid ${BR}`,padding:'12px 22px',borderRadius:12}}>

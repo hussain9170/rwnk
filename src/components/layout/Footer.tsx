@@ -13,7 +13,7 @@ import {
 function buildLinks() {
   return {
     'المنتج': [
-      { label: 'المميزات',         href: '/#features'  },
+      { label: 'معاينة الدليل',    href: '/#preview-heading' },
       { label: 'المحتوى',          href: '/#content'   },
       { label: 'التسعير',          href: '/#pricing'   },
       { label: 'الأسئلة الشائعة', href: '/#faq'       },
