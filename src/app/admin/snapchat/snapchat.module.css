@@ -1,0 +1,19 @@
+.page { min-height: 100vh; padding: 48px 20px; background: #f7f5fb; color: #1a1228; }
+.card { width: 100%; max-width: 800px; margin: 0 auto; padding: 32px; background: white; border: 1px solid #ede8f5; border-radius: 24px; box-shadow: 0 12px 40px #26215c08; }
+.card > * + * { margin-top: 20px; }
+.card h1 { font-size: 28px; line-height: 1.5; }
+.card p { line-height: 1.8; }
+.back { display: inline-block; color: #6747b2; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.connected, .pending { padding: 16px; border-radius: 12px; font-weight: 700; }
+.connected { background: #e1f5ee; color: #136b4c; }
+.pending { background: #faeeda; color: #735018; }
+.button { padding: 12px 24px; border: 0; border-radius: 12px; background: #6747b2; color: white; font: inherit; font-weight: 700; cursor: pointer; }
+.button:disabled { opacity: .6; cursor: wait; }
+.button:focus-visible, .back:focus-visible { outline: 3px solid #36db9c; outline-offset: 4px; }
+.tableWrap { overflow-x: auto; border: 1px solid #ede8f5; border-radius: 12px; }
+.table { width: 100%; text-align: right; border-collapse: collapse; white-space: nowrap; }
+.table th, .table td { padding: 16px; }
+.table thead { background: #f7f5fb; color: #4a4060; }
+.table tbody tr + tr { border-top: 1px solid #ede8f5; }
+.card [role='alert'] { color: #a12a29; }
+@media (max-width: 540px) { .page { padding: 20px 12px; } .card { padding: 24px 16px; border-radius: 16px; } .card h1 { font-size: 24px; } .table th, .table td { padding: 12px; } }
