@@ -13,6 +13,7 @@ export default function SnapchatConnectionPage() {
 function SnapchatConnection() {
   const [status, setStatus] = useState<Status | null>(null)
   const [error, setError] = useState('')
+  const [connecting, setConnecting] = useState(false)
   const result = useSearchParams().get('result')
   const messages: Record<string, string> = {
     connected: 'تم حفظ تفويض سناب بنجاح.',
@@ -22,6 +23,22 @@ function SnapchatConnection() {
     connection_failed: 'تعذر إكمال الربط. تأكد من صلاحية حسابك في مؤسسة رونق ثم حاول مجدداً.',
   }
   const resultMessage = result ? messages[result] : ''
+  async function connect(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setConnecting(true)
+    setError('')
+    try {
+      const response = await fetch('/api/admin/integrations/snapchat/connect', { method: 'POST' })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'تعذر بدء تفويض سناب')
+      const destination = new URL(data.authorizeUrl)
+      if (destination.origin !== 'https://accounts.snapchat.com' || destination.pathname !== '/login/oauth2/authorize') throw new Error('عنوان تفويض غير صالح')
+      window.location.assign(destination.toString())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'تعذر بدء تفويض سناب')
+      setConnecting(false)
+    }
+  }
   useEffect(() => {
     let cancelled = false
     fetch('/api/admin/integrations/snapchat', { cache: 'no-store' }).then(async response => {
@@ -40,8 +57,8 @@ function SnapchatConnection() {
       {error ? <p role="alert">{error}</p> : !status ? <p>جاري فحص الاتصال…</p> : <>
         <p role="status">{status.verified ? 'الاتصال شغال وتم التحقق من الحسابات ✅' : status.connected ? 'التفويض محفوظ، والتحقق من الاتصال يحتاج مراجعة' : status.configured ? 'جاهز للتفويض' : 'إعداد الاتصال على السيرفر غير مكتمل'}</p>
         {status.error && <p role="alert">{status.error}</p>}
-        {status.configured && <form method="post" action="/api/admin/integrations/snapchat/connect">
-          <button type="submit" className="rounded-xl bg-purple-800 px-6 py-3 text-white">{status.connected ? 'إعادة تفويض سناب' : 'ربط حساب سناب'}</button>
+        {status.configured && <form onSubmit={connect}>
+          <button type="submit" disabled={connecting} className="rounded-xl bg-purple-800 px-6 py-3 text-white">{connecting ? 'جاري الانتقال لسناب…' : status.connected ? 'إعادة تفويض سناب' : 'ربط حساب سناب'}</button>
         </form>}
         {!!status.accounts?.length && <div className="overflow-x-auto"><table className="w-full text-right">
           <thead><tr><th className="p-3">الحساب الإعلاني</th><th className="p-3">العملة</th><th className="p-3">الحالة</th></tr></thead>

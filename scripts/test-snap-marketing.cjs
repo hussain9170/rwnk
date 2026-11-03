@@ -140,8 +140,8 @@ async function run() {
   const startURL = `${c.SNAP_MARKETING_ORIGIN}/api/admin/integrations/snapchat/connect`
   assert.equal((await connect.POST(new NextRequest(startURL, { method: 'POST', headers: { origin: 'https://evil.test' } }))).status, 403)
   const start = await connect.POST(new NextRequest(startURL, { method: 'POST', headers: { origin: c.SNAP_MARKETING_ORIGIN } }))
-  assert.equal(start.status, 303)
-  const destination = new URL(start.headers.get('location'))
+  assert.equal(start.status, 200)
+  const destination = new URL((await start.json()).authorizeUrl)
   assert.equal(destination.origin, 'https://accounts.snapchat.com')
   assert.equal(destination.searchParams.get('scope'), 'snapchat-marketing-api')
   assert(!destination.searchParams.has('client_secret'))

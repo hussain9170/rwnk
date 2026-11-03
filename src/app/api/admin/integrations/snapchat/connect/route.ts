@@ -22,7 +22,9 @@ export async function POST(request: NextRequest) {
   const url = new URL('https://accounts.snapchat.com/login/oauth2/authorize')
   url.search = new URLSearchParams({ client_id: process.env.SNAP_MARKETING_CLIENT_ID!, redirect_uri: SNAP_MARKETING_CALLBACK,
     response_type: 'code', scope: 'snapchat-marketing-api', state }).toString()
-  const response = NextResponse.redirect(url, 303)
+  // Return the destination to the admin client, which navigates separately.
+  // A native POST + cross-origin 303 is blocked by our strict form-action CSP.
+  const response = NextResponse.json({ authorizeUrl: url.toString() })
   response.headers.set('Cache-Control', 'no-store')
   response.headers.set('Referrer-Policy', 'no-referrer')
   response.cookies.set(SNAP_MARKETING_COOKIE, state, { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: 600 })
