@@ -49,6 +49,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
     console.log(`[admin/book-languages/${id}] updated fields=${Object.keys(patch).join(',')}`)
     revalidatePath('/checkout')
+    revalidatePath('/')
     return NextResponse.json({ success: true, data })
   } catch (err: any) {
     console.error(`[admin/book-languages/${id}] PUT unhandled exception:`, err)
@@ -102,6 +103,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
     console.log(`[admin/book-languages/${id}] deleted language_code=${language.language_code}`)
     revalidatePath('/checkout')
+    revalidatePath('/')
     return NextResponse.json({ success: true, ok: true })
   } catch (err: any) {
     console.error(`[admin/book-languages/${id}] DELETE unhandled exception:`, err)

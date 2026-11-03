@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
     }
     console.log(`[admin/book-languages] created language_code=${languageCode} is_active=${payload.is_active}`)
     revalidatePath('/checkout')
+    revalidatePath('/')
     return NextResponse.json({ success: true, data })
   } catch (err: any) {
     console.error('[admin/book-languages] POST unhandled exception:', err)

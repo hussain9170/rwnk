@@ -95,10 +95,10 @@ export const DEFAULT_SETTINGS: StoreSettings = {
 // No module-level cache here on purpose: this used to memoize the result
 // for the lifetime of the server process, so an admin edit in
 // /api/admin/settings wouldn't show up on the public site until the next
-// cold start — the opposite of "updates instantly from dashboard". Next's
-// own per-request rendering plus revalidatePath() (called after every
-// settings write) is what makes this fast/fresh instead.
-export async function getStoreSettings(): Promise<StoreSettings> {
+// cold start — the opposite of "updates instantly from dashboard". The
+// homepage now caches its HTML, invalidated by revalidatePath on admin saves.
+// Checkout calls this reader directly without a shared settings cache.
+export async function getStoreSettings({ strict = false }: { strict?: boolean } = {}): Promise<StoreSettings> {
   try {
     const { getPublicSupabase } = await import('./public-supabase')
     const { getSingletonRow } = await import('./db-resilience')
@@ -112,7 +112,10 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     // anywhere. getSingletonRow tolerates that instead of crashing, and
     // logs loudly so a duplicate is caught immediately, not indefinitely.
     const { data, error } = await getSingletonRow<Partial<StoreSettings>>(sb, 'store_settings')
-    if (error) console.error(`[getStoreSettings] ${error.message} — falling back to DEFAULT_SETTINGS.`)
+    if (error) {
+      if (strict) throw new Error(`[getStoreSettings] ${error.message}`)
+      console.error(`[getStoreSettings] ${error.message} — falling back to DEFAULT_SETTINGS.`)
+    }
     if (data) {
       const settings = { ...DEFAULT_SETTINGS, ...data }
       // Migrate the original title without overwriting a new title set by the owner.
@@ -122,6 +125,9 @@ export async function getStoreSettings(): Promise<StoreSettings> {
       return settings
     }
   } catch (e) {
+    // Failed ISR regeneration keeps the last successful page. Never replace
+    // its price/content with fallback values after a temporary DB failure.
+    if (strict) throw e
     console.error(`[getStoreSettings] unexpected error — falling back to DEFAULT_SETTINGS: ${e instanceof Error ? e.message : e}`)
   }
   return DEFAULT_SETTINGS

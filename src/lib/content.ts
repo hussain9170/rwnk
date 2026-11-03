@@ -92,13 +92,19 @@ export async function getComparisonRows(): Promise<ComparisonRow[]> {
 // yet (migration not applied) or genuinely has no active rows, so checkout
 // never renders an empty language picker and can never be fully blocked by
 // this feature.
-export async function getBookLanguages(): Promise<BookLanguage[]> {
+export async function getBookLanguages({ strict = false }: { strict?: boolean } = {}): Promise<BookLanguage[]> {
   try {
     const sb = await getSb()
     const { data, error } = await sb.from('book_languages').select('id,language_code,name_ar,name_en,is_active,sort_order').eq('is_active', true).not('file_path', 'is', null).neq('file_path', '').order('sort_order', { ascending: true })
-    if (error) return []
+    if (error) {
+      if (strict) throw new Error(`[book_languages] ${error.message}`)
+      return []
+    }
     return data ?? []
-  } catch { return [] }
+  } catch (error) {
+    if (strict) throw error
+    return []
+  }
 }
 
 export async function getPage(slug: 'about' | 'terms' | 'privacy' | 'refund'): Promise<PageContent> {

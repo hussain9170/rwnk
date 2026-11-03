@@ -62,12 +62,8 @@ export async function PATCH(request: NextRequest) {
   }
   console.log(`[admin/settings] update succeeded — id=${existing.id} fields=${Object.keys(payload).join(',')}`)
 
-  // Every public page reads store_settings server-side on each request, but
-  // Next's full-route cache can still serve a pre-rendered copy of static
-  // pages until told otherwise — this is what makes edits show up right away.
-  // (The public pages themselves are ALSO now force-dynamic — see
-  // src/app/page.tsx — so this is a secondary safety net, not the only
-  // thing standing between an edit and it showing up live.)
+  // Expire the homepage's ISR output after a successful save. The next visit
+  // renders current public settings; checkout remains request-rendered.
   revalidatePath('/')
   revalidatePath('/checkout')
   revalidatePath('/faq')

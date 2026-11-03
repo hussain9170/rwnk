@@ -19,10 +19,11 @@ import { PaymentMarks } from '@/components/ui/PaymentMarks'
 import { ProductFacts } from '@/components/sections/ProductFacts'
 import { GuideContents } from '@/components/sections/GuideContents'
 
-// Render each request so price/settings/language availability stay fresh.
-// Published CMS lists have a separate tagged data cache, expired immediately
-// after successful admin edits; the full HTML is never shared from ISR.
-export const dynamic = 'force-dynamic'
+// Anonymous storefront HTML is shared at the CDN. Admin writes invalidate
+// this path; the time limit also refreshes changes made outside the dashboard.
+// Checkout and its API still read and validate the live price/language.
+export const dynamic = 'force-static'
+export const revalidate = 300
 
 const P='#6747B2',PL='#EDE8FF',PT='#26215C',T1='#1A1228',T2='#4A4060',T3='#6B617E',BR='#EDE8F5'
 
@@ -30,7 +31,7 @@ export const metadata: Metadata = publicMetadata('دليل رونق لتدريب
 
 export default async function HomePage() {
   const [settings, faqs, languages] = await Promise.all([
-    getStoreSettings(), getFaqs(), getBookLanguages(),
+    getStoreSettings({ strict: true }), getFaqs(), getBookLanguages({ strict: true }),
   ])
   const testimonials = settings.testimonials_visible ? await getTestimonials() : []
 
