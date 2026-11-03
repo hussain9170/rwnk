@@ -16,7 +16,13 @@ async function snapPages(path: string, token: string) {
   for (let page = 0; url && page < 20; page++) {
     if (url.origin !== API_ORIGIN || url.pathname !== first.pathname || url.username || url.password) throw new Error('Invalid report pagination')
     const response: Response = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: AbortSignal.timeout(15_000) })
-    if (!response.ok) throw new Error(`Snap report request failed (${response.status})`)
+    if (!response.ok) {
+      const failure = await response.json().catch(() => ({}))
+      const reason = [failure.error_code, failure.display_message, failure.debug_message]
+        .filter(value => typeof value === 'string').join(' ').slice(0, 500)
+        .replace(/Bearer\s+\S+/gi, 'Bearer [redacted]')
+      throw new Error(`Snap report request failed (${response.status}): ${reason}`)
+    }
     const body: WirePage = await response.json()
     if (!success(body.request_status)) throw new Error('Snap report response failed')
     pages.push(body)
@@ -29,10 +35,10 @@ async function snapPages(path: string, token: string) {
 async function fetchAccountStats(account: SnapAdAccount, days: number, token: string) {
   const range = snapReportRange(days)
   const params = new URLSearchParams({ granularity: 'TOTAL', fields: SNAP_REPORT_FIELDS.join(','), start_time: range.start, end_time: range.end,
-    swipe_up_attribution_window: '7_DAY', view_attribution_window: '1_DAY', action_report_time: 'conversion', omit_empty: 'false', limit: '200' })
+    swipe_up_attribution_window: '7_DAY', view_attribution_window: '1_DAY', action_report_time: 'conversion' })
   const [totalPages, breakdownPages, campaignPages] = await Promise.all([
     snapPages(`adaccounts/${account.id}/stats?${params}`, token),
-    snapPages(`adaccounts/${account.id}/stats?${params}&breakdown=campaign`, token).catch(() => null),
+    snapPages(`adaccounts/${account.id}/stats?${params}&breakdown=campaign&limit=200`, token).catch(() => null),
     snapPages(`adaccounts/${account.id}/campaigns?limit=200`, token).catch(() => null),
   ])
   const totals = totalPages.flatMap(p => p.total_stats ?? [])
