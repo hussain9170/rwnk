@@ -132,6 +132,7 @@ export async function POST(request: NextRequest) {
       const uuid = (v: string | undefined) => v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v) ? v : null
       const { error } = await sb.from('snap_purchase_outbox').insert({
         purchase_id: purchase.id, consent_id: consent.receipt, consent_version: consent.version, consent_at: consent.at,
+        client_user_agent: request.headers.get('user-agent')?.replace(/[\r\n]/g, '').slice(0, 1024) || null,
         sc_click_id: uuid(request.cookies.get('rwnak_snap_click')?.value), sc_cookie1: uuid(request.cookies.get('_scid')?.value),
       })
       if (error) console.warn('[snap/consent] receipt not recorded', error.code)

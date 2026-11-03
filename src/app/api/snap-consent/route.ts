@@ -10,7 +10,7 @@ export async function DELETE(request: NextRequest) {
   if (!url || !key) return new NextResponse(null, { status: 503 })
   const { createClient } = await import('@supabase/supabase-js')
   const { error } = await createClient(url, key).from('snap_purchase_outbox')
-    .update({ revoked_at: new Date().toISOString(), sc_click_id: null, sc_cookie1: null })
+    .update({ revoked_at: new Date().toISOString(), sc_click_id: null, sc_cookie1: null, client_user_agent: null })
     .eq('consent_id', consent.receipt).is('sent_at', null)
   return new NextResponse(null, { status: error ? 503 : 204 })
 }

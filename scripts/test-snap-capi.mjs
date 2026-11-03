@@ -5,9 +5,14 @@ import { parseSnapConsent } from '../src/lib/snap-consent.ts'
 
 const now = Date.now()
 const purchase = { id: '11111111-1111-4111-8111-111111111111', status: 'completed', email: ' Customer@Example.com ', amount: 5, currency: 'KWD', paid_at: new Date(now - 1000).toISOString(), invoice_number: 'RW-TEST-1', product_id: 'book-ar' }
-const receipt = { purchase_id: purchase.id, consent_id: '22222222-2222-4222-8222-222222222222', consent_version: 'snap-v1', consent_at: new Date(now - 2000).toISOString(), sc_click_id: null, sc_cookie1: null, revoked_at: null, lease_id: 'lease' }
+const receipt = { purchase_id: purchase.id, consent_id: '22222222-2222-4222-8222-222222222222', consent_version: 'snap-v1', consent_at: new Date(now - 2000).toISOString(), sc_click_id: null, sc_cookie1: null, client_user_agent: 'Mozilla/5.0 (test browser)', revoked_at: null, lease_id: 'lease' }
 const event = buildSnapPurchase(purchase, receipt, now)
 assert.equal(event.user_data.em[0], createHash('sha256').update('customer@example.com').digest('hex'))
+assert.equal(event.user_data.client_user_agent, receipt.client_user_agent)
+assert.equal('client_user_agent' in buildSnapPurchase(purchase, { ...receipt, client_user_agent: null }, now).user_data, false, 'old receipts remain deliverable')
+const attributed = buildSnapPurchase(purchase, { ...receipt, sc_click_id: 'test-click', sc_cookie1: 'test-cookie' }, now)
+assert.equal(attributed.user_data.sc_click_id, 'test-click')
+assert.equal(attributed.user_data.sc_cookie1, 'test-cookie')
 assert.equal(event.custom_data.value, 5)
 assert.equal(event.custom_data.currency, 'KWD')
 assert.equal(event.event_id, purchase.invoice_number)
@@ -34,6 +39,7 @@ assert.equal(parseSnapConsent(`snap-v1.yes.${receipt.consent_id}.${now - 181 * 8
 
 process.env.SNAP_CAPI_ENABLED = 'true'
 process.env.SNAP_CAPI_ACCESS_TOKEN = 'local-test-only-not-a-real-token'
+let savedUpdate = null
 let leased = false, sentAt = null, revoked = null, requests = [], fail = false
 const sb = {
   async rpc() { if (leased || sentAt) return { data: [], error: null }; leased = true; return { data: [receipt], error: null } },
@@ -41,7 +47,7 @@ const sb = {
     let update
     const chain = {
       select() { return chain }, eq() { return chain },
-      update(value) { update = value; return chain },
+      update(value) { savedUpdate = value; update = value; return chain },
       async single() { return { data: table === 'purchases' ? purchase : { revoked_at: revoked } } },
       then(resolve) { if (update?.sent_at) sentAt = update.sent_at; resolve({ error: null }) },
     }
@@ -51,6 +57,9 @@ const sb = {
 const send = async (url, init) => { requests.push(JSON.parse(init.body)); assert.equal(url.hostname, 'tr.snapchat.com'); return new Response(JSON.stringify({ status: fail ? 'INVALID' : 'VALID' }), { status: fail ? 500 : 200 }) }
 await Promise.all([flushSnapPurchases(sb, purchase.id, send), flushSnapPurchases(sb, purchase.id, send)])
 assert.equal(requests.length, 1, 'concurrent leased sends produce one request')
+assert.equal(savedUpdate.client_user_agent, null, 'browser metadata is cleared after confirmed delivery')
+assert.equal(savedUpdate.sc_click_id, null)
+assert.equal(savedUpdate.sc_cookie1, null)
 await flushSnapPurchases(sb, purchase.id, send)
 assert.equal(requests.length, 1, 'sent events are skipped')
 leased = false; sentAt = null; fail = true

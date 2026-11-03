@@ -10,6 +10,7 @@ export interface SnapPurchase {
 export interface SnapReceipt {
   purchase_id: string; consent_id: string; consent_version: string; consent_at: string
   sc_click_id: string | null; sc_cookie1: string | null; revoked_at: string | null
+  client_user_agent?: string | null
   lease_id?: string
 }
 
@@ -33,6 +34,7 @@ export function buildSnapPurchase(p: SnapPurchase, receipt: SnapReceipt, now = D
     event_source_url: 'https://www.rwnak.net/checkout',
     user_data: {
       em: [createHash('sha256').update(email).digest('hex')],
+      ...(receipt.client_user_agent ? { client_user_agent: receipt.client_user_agent } : {}),
       ...(receipt.sc_click_id ? { sc_click_id: receipt.sc_click_id } : {}),
       ...(receipt.sc_cookie1 ? { sc_cookie1: receipt.sc_cookie1 } : {}),
     },
@@ -60,7 +62,7 @@ export async function flushSnapPurchases(sb: SupabaseClient, purchaseId: string 
         const res = await send(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: [event] }), signal: AbortSignal.timeout(5000) })
         const result = await res.json().catch(() => null)
         const ok = res.ok && result?.status === 'VALID'
-        const { error: saveError } = await sb.from('snap_purchase_outbox').update(ok ? { sent_at: new Date().toISOString(), last_http_status: res.status, sc_click_id: null, sc_cookie1: null } : { last_http_status: res.status }).eq('purchase_id', receipt.purchase_id).eq('lease_id', receipt.lease_id)
+        const { error: saveError } = await sb.from('snap_purchase_outbox').update(ok ? { sent_at: new Date().toISOString(), last_http_status: res.status, sc_click_id: null, sc_cookie1: null, client_user_agent: null } : { last_http_status: res.status }).eq('purchase_id', receipt.purchase_id).eq('lease_id', receipt.lease_id)
         if (ok && !saveError) sent++
         if (!ok || saveError) console.warn('[snap/capi] delivery not confirmed', res.status)
       } catch { console.warn('[snap/capi] transient delivery failure; retained for retry') }
