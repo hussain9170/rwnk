@@ -20,7 +20,7 @@ export default function SnapConsent() {
     }
     document.cookie = `${SNAP_CONSENT_COOKIE}=${SNAP_CONSENT_VERSION}.${granted ? 'yes' : 'no'}.${crypto.randomUUID()}.${Date.now()}; Path=/; Max-Age=15552000; SameSite=Lax; Secure`
     if (!granted) {
-      for (const name of ['_scid', '_scid_r', 'rwnak_snap_click']) {
+      for (const name of ['_scid', '_scid_r', 'rwnak_snap_click', 'rwnak_snap_source']) {
         document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax; Secure`
         document.cookie = `${name}=; Domain=.rwnak.net; Path=/; Max-Age=0; SameSite=Lax; Secure`
       }

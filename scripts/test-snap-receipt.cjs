@@ -2,12 +2,13 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const vm = require('node:vm')
 const ts = require('typescript')
-let granted = true, gpc = false, inserted, revoked
+let granted = true, gpc = false, inserted, revoked, sourceEnabled = false, attributionInserted, attributionDeleted = false
 const sb = { from(table) {
   const chain = {
     select() { return chain }, eq() { return chain }, is() { return chain },
+    delete() { if (table === 'purchase_marketing_attribution') attributionDeleted = true; return chain },
     async maybeSingle() { return { data: { language_code: 'ar', file_path: 'book.pdf' } } },
-    async insert(value) { inserted = value; return { error: null } },
+    async insert(value) { if (table === 'purchase_marketing_attribution') attributionInserted = value; else inserted = value; return { error: null } },
     update(value) { revoked = value; return chain },
     then(resolve) { resolve({ error: null }) },
   }
@@ -24,6 +25,7 @@ const deps = {
   },
   '@/lib/snap-consent': { SNAP_CONSENT_COOKIE: 'consent', parseSnapConsent: () => granted ? { granted: true, receipt: 'test-consent', version: 'snap-v1', at: new Date().toISOString() } : null },
   '@/lib/policy-consent': { POLICY_VERSION: 'test-policy' },
+  '@/lib/snap-attribution': { SNAP_SOURCE_COOKIE: 'rwnak_snap_source', parseSnapAttribution: () => sourceEnabled ? { source: 'snapchat', medium: 'paid_social', account: 'test-account', campaign: 'campaign', content: 'creative', at: Date.now() - 1000 } : null },
   '@supabase/supabase-js': { createClient: () => sb },
 }
 function load(file) {
@@ -38,16 +40,26 @@ function load(file) {
   assert.equal(inserted.client_user_agent.length, 1024)
   assert(!/[\r\n]/.test(inserted.client_user_agent))
   assert.equal(inserted.purchase_id, 'test-purchase')
+  assert.equal(attributionInserted, undefined)
+  sourceEnabled = true
+  assert.equal((await route.POST(req)).status, 200)
+  assert.equal(attributionInserted.medium, 'paid_social')
+  assert.equal(attributionInserted.account_id, 'test-account')
+  assert.equal(attributionInserted.consent_id, 'test-consent')
+  attributionInserted = null
   inserted = null; granted = false
   assert.equal((await route.POST(req)).status, 200)
   assert.equal(inserted, null, 'no receipt without consent')
+  assert.equal(attributionInserted, null, 'no source attribution without consent')
   granted = true; gpc = true
   assert.equal((await route.POST(req)).status, 200)
   assert.equal(inserted, null, 'GPC suppresses metadata')
+  assert.equal(attributionInserted, null, 'GPC suppresses source attribution')
   const revoke = load('src/app/api/snap-consent/route.ts')
   assert.equal((await revoke.DELETE(req)).status, 204)
   assert.equal(revoked.client_user_agent, null)
   assert.equal(revoked.sc_click_id, null)
   assert.equal(revoked.sc_cookie1, null)
+  assert.equal(attributionDeleted, true, 'withdrawal removes source attribution')
   console.log('PASS: checkout metadata is consent-only, bounded, GPC-aware, and cleared on revocation')
 })().catch(error => { console.error(error); process.exitCode = 1 })

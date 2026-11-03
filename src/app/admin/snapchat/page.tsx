@@ -53,6 +53,7 @@ function SnapchatConnection() {
     <div className={styles.card}>
       <Link href="/admin" className={styles.back}>العودة للوحة التحكم</Link>
       <h1>ربط إعلانات سناب</h1>
+      <Link href="/admin/snapchat/report" className={styles.back}>لوحة الإنفاق والمبيعات ←</Link>
       <p>اربط حساب الأعمال لقراءة حسابات الإعلان والتحقق من الاتصال.</p>
       {resultMessage && <p role="status">{resultMessage}</p>}
       {error && <p role="alert">{error}</p>}

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { isPublicPixelUrl, snapTracker } from '@/lib/snap-client'
 import { hasSnapConsent, subscribeSnapConsent } from '@/lib/snap-consent'
 import { useSyncExternalStore } from 'react'
+import { SNAP_SOURCE_COOKIE, snapAttributionFromUrl } from '@/lib/snap-attribution'
 
 export default function SnapPixel() {
   const pathname = usePathname()
@@ -25,6 +26,8 @@ export default function SnapPixel() {
     const tracker = snapTracker()
     if (!tracker) return
     initialized.current = true
+    const source = snapAttributionFromUrl(window.location.href)
+    if (source !== undefined) document.cookie = `${SNAP_SOURCE_COOKIE}=${source ? encodeURIComponent(JSON.stringify(source)) : ''}; Path=/; Max-Age=${source ? 2592000 : 0}; SameSite=Lax; Secure`
     const click = new URL(window.location.href).searchParams.get('ScCid')
     if (click && /^[0-9a-f-]{36}$/i.test(click)) document.cookie = `rwnak_snap_click=${click}; Path=/; Max-Age=2592000; SameSite=Lax; Secure`
     if (lastPage.current !== pathname) {

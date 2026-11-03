@@ -5,6 +5,7 @@ import { getSupabaseServerEnv } from '@/lib/env'
 import { insertWithSchemaFallback, getSingletonRow } from '@/lib/db-resilience'
 import { SNAP_CONSENT_COOKIE, parseSnapConsent } from '@/lib/snap-consent'
 import { POLICY_VERSION } from '@/lib/policy-consent'
+import { SNAP_SOURCE_COOKIE, parseSnapAttribution } from '@/lib/snap-attribution'
 
 export const dynamic = 'force-dynamic'
 
@@ -128,6 +129,16 @@ export async function POST(request: NextRequest) {
   // Failure to record optional advertising consent must never block payment.
   const consent = parseSnapConsent(request.cookies.get(SNAP_CONSENT_COOKIE)?.value)
   if (consent?.granted && request.headers.get('sec-gpc') !== '1') {
+    const source = parseSnapAttribution(request.cookies.get(SNAP_SOURCE_COOKIE)?.value)
+    if (source) {
+      try {
+        const { error } = await sb.from('purchase_marketing_attribution').insert({
+          purchase_id: purchase.id, consent_id: consent.receipt, source: source.source, medium: source.medium,
+          account_id: source.account, campaign: source.campaign, content: source.content, acquired_at: new Date(source.at).toISOString(),
+        })
+        if (error) console.warn('[snap/attribution] attribution not recorded', error.code)
+      } catch { console.warn('[snap/attribution] unavailable; checkout unaffected') }
+    }
     try {
       const uuid = (v: string | undefined) => v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v) ? v : null
       const { error } = await sb.from('snap_purchase_outbox').insert({
