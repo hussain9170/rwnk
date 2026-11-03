@@ -115,9 +115,9 @@ export async function snapPurchaseVerification() {
     note: 'قبول حدث شراء من السيرفر لا يثبت أن الطلب جاء من إعلان سناب.' }
 }
 
-export async function buildSnapReport(days: number, requestedAccountId?: string | null, persist = true) {
-  const token = await getSnapAccessToken()
-  const accounts = await listSnapAdAccounts(token)
+export async function buildSnapReport(days: number, requestedAccountId?: string | null, persist = true, context?: { token: string; accounts: SnapAdAccount[] }) {
+  const token = context?.token ?? await getSnapAccessToken()
+  const accounts = context?.accounts ?? await listSnapAdAccounts(token)
   const account = requestedAccountId ? accounts.find(a => a.id === requestedAccountId) : accounts.find(a => a.name === 'rwnak website') ?? accounts[0]
   if (!account) throw new Error('Ad account is not available to this connection')
   const db = getAdminDb()

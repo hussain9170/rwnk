@@ -82,7 +82,7 @@ it must report the observation time and flag stale or missing data.
 
 An authenticated Vercel cron calls `/api/cron/snap-report` daily at 14:00 UTC
 (17:00 Kuwait; platform timing may vary), refreshing 1/7/30-day reports for
-the `rwnak website` account. Manual dashboard reads also refresh snapshots.
+all connected ad accounts. Manual dashboard reads also refresh snapshots.
 This job is separate from the existing purchase/email retry cron.
 
 Cost settings are optional and initially unknown. The calculator shows
