@@ -82,7 +82,7 @@ const server = load('src/lib/snap-report.ts', deps, { fetch: async (url, options
   assert(!parsed.searchParams.has('test'), 'never request fake API statistics')
   const stats = { spend: 20000000, conversion_purchases: 3, conversion_purchases_value: 15000000, impressions: 1000, swipes: 10 }
   return Response.json({ request_status: 'SUCCESS', total_stats: [{ sub_request_status: 'SUCCESS', total_stat: { id: account.id,
-    ...(parsed.searchParams.has('breakdown') ? { breakdown_stats: { campaign: [{ id: 'campaign1', stats }] } } : { stats }) } }] })
+    ...(parsed.searchParams.has('breakdown') ? { breakdown_stats: { campaign: [{ id: 'campaign1', stats }] } } : { stats: { spend: 20000000 } }) } }] })
 } })
 
 async function run() {

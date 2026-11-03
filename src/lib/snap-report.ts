@@ -36,8 +36,13 @@ async function fetchAccountStats(account: SnapAdAccount, days: number, token: st
   const range = snapReportRange(days)
   const params = new URLSearchParams({ granularity: 'TOTAL', fields: SNAP_REPORT_FIELDS.join(','), start_time: range.start, end_time: range.end,
     swipe_up_attribution_window: '7_DAY', view_attribution_window: '1_DAY', action_report_time: 'conversion' })
+  const accountParams = new URLSearchParams(params)
+  // Snap validates plain AD_ACCOUNT totals as spend-only (E1008). Other
+  // additive metrics must come from its campaign breakdown, never by adding
+  // account spend and campaign spend together.
+  accountParams.set('fields', 'spend')
   const [totalPages, breakdownPages, campaignPages] = await Promise.all([
-    snapPages(`adaccounts/${account.id}/stats?${params}`, token),
+    snapPages(`adaccounts/${account.id}/stats?${accountParams}`, token),
     snapPages(`adaccounts/${account.id}/stats?${params}&breakdown=campaign&limit=200`, token).catch(() => null),
     snapPages(`adaccounts/${account.id}/campaigns?limit=200`, token).catch(() => null),
   ])
@@ -52,11 +57,20 @@ async function fetchAccountStats(account: SnapAdAccount, days: number, token: st
   let campaignsComplete = !!breakdownPages
   for (const page of breakdownPages ?? []) for (const entry of page.total_stats ?? []) {
     if (!success(entry.sub_request_status)) { campaignsComplete = false; continue }
+    if (!Array.isArray(entry.total_stat?.breakdown_stats?.campaign)) { campaignsComplete = false; continue }
     for (const campaign of entry.total_stat?.breakdown_stats?.campaign ?? []) {
       if (seen.has(campaign.id)) continue
       seen.add(campaign.id)
       const campaignMetrics = parseSnapMetrics(campaign.stats ?? {})
       campaigns.push({ id: campaign.id, name: names.get(campaign.id) ?? campaign.id, metrics: campaignMetrics, amounts: snapMetricAmounts(campaignMetrics) })
+    }
+  }
+  if (breakdownPages?.some(page => !Array.isArray(page.total_stats))) campaignsComplete = false
+  if (campaignsComplete) {
+    for (const field of SNAP_REPORT_FIELDS) {
+      if (field === 'spend') continue
+      metrics[field] = campaigns.every(campaign => campaign.metrics[field] !== null)
+        ? campaigns.reduce((sum, campaign) => sum + campaign.metrics[field]!, 0) : null
     }
   }
   campaigns.sort((a, b) => (b.amounts.spend ?? 0) - (a.amounts.spend ?? 0))
