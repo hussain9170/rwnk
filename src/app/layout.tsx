@@ -2,8 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { tajawal } from '@/lib/font'
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
 import MetaPixel from '@/components/analytics/MetaPixel'
-import SnapPixel from '@/components/analytics/SnapPixel'
-import SnapConsent from '@/components/analytics/SnapConsent'
 import './globals.css'
 import { SITE_URL, SHARE_IMAGE, PRODUCT_NAME } from '@/lib/seo'
 
@@ -48,8 +46,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <GoogleAnalytics />
         <MetaPixel />
-        <SnapPixel />
-        <SnapConsent />
         {children}
       </body>
     </html>
