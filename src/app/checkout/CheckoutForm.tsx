@@ -36,6 +36,7 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
   const [loading,setLoading]=useState(false)
   const [error,setError]=useState('')
   const [banner,setBanner]=useState('')
+  const [tiktokPurchaseConsent, setTikTokPurchaseConsent] = useState(false)
   const [policyAccepted,setPolicyAccepted]=useState(false)
   const [policyError,setPolicyError]=useState('')
   const submitting = useRef(false)
@@ -75,7 +76,7 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
     try {
       const checkoutRes = await fetch('/api/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, customerName, paymentMethod: pm, bookLanguage, expectedPrice: settings.product_price, policyAccepted, policyVersion: POLICY_VERSION }),
+        body: JSON.stringify({ email, customerName, paymentMethod: pm, bookLanguage, expectedPrice: settings.product_price, tiktokPurchaseConsent, policyAccepted, policyVersion: POLICY_VERSION }),
       })
       const checkoutJson = await checkoutRes.json()
       if (!checkoutRes.ok) throw new Error(checkoutJson.error ?? 'تعذّر إنشاء الطلب')
@@ -199,6 +200,10 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
         <p aria-live="polite" style={{fontSize:15,fontWeight:800,color:P,background:PL,borderRadius:10,padding:12,marginBottom:16}}>{bookLanguage ? `نسختج: ${languages.find(l=>l.language_code===bookLanguage)?.name_ar} فقط` : 'اختاري لغة واحدة من الخيارات أعلاه'}</p>
         <div ref={policyField}><PolicyConsent checked={policyAccepted} onChange={value => { setPolicyAccepted(value); setPolicyError('') }} purchase /></div>
         {policyError ? <p role="alert" className="consent-error">{policyError}</p> : null}
+        <label style={{display:'flex',alignItems:'flex-start',gap:8,fontSize:12,color:T3,lineHeight:1.8,marginBottom:14,cursor:'pointer'}}>
+          <input type="checkbox" checked={tiktokPurchaseConsent} onChange={e => setTikTokPurchaseConsent(e.target.checked)} style={{marginTop:5,accentColor:P}} />
+          <span>اختياري: أوافق على مشاركة قيمة الشراء والبريد بصيغة مجزّأة ومعرّفات المتصفح مع تيك توك لقياس الإعلانات. الشراء متاح بدون الموافقة. <Link href="/privacy" target="_blank" rel="noopener noreferrer">الخصوصية</Link></span>
+        </label>
         <button type="submit" disabled={loading || !languages.length} aria-busy={loading} style={{width:'100%',height:52,background:loading?'#8b6dd4':P,color:'#fff',border:'none',borderRadius:12,fontSize:15,fontWeight:900,cursor:loading?'wait':'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",boxShadow:'0 2px 12px rgba(103,71,178,.28)'}}>
           {loading?'جاري التحويل لبوابة الدفع...':`ادفعي الآن — ${priceLabel}`}
         </button>
