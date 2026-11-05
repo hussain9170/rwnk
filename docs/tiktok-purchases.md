@@ -10,3 +10,7 @@
 - Consent withdrawal requests: set `revoked_at=now()` for the corresponding unsent outbox entry. Already transmitted events cannot be recalled by this code. Do not send a test purchase as a real conversion.
 - No browser SDK on receipt/account/auth URLs. Browser ViewContent/InitiateCheckout remain separate from server Purchase.
 - Verification: tests cover paid/pending/failed/refunded states, consent, private data, dedup IDs, API error/retry handling. Database transaction tests verify leases and restricted privileges with all fixtures rolled back. A real new opted-in paid order (or Events Manager server test code) is still needed for end-to-end TikTok acceptance verification.
+
+## Test verification — 2026-11-06 (Kuwait)
+
+A synthetic Purchase sent with Test Events code TEST29992 was accepted by TikTok with HTTP 200 / API code 0. Request ID: 20261105233635F0161FFB512C27D3AC00. No orders or live conversion queue were written. The temporary authenticated endpoint was removed and its credential disabled afterward. Test acceptance verifies token and server transport; a genuine opted-in checkout has not yet been validated end-to-end.
