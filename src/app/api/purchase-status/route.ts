@@ -1,4 +1,3 @@
-import { flushTikTokPurchases } from '@/lib/tiktok-events'
 import { flushPurchaseEmails } from '@/lib/purchase-mail-queue'
 import { publicRateLimit } from '@/lib/public-rate-limit'
 import { purchaseReader } from '@/lib/purchase-access'
@@ -65,7 +64,7 @@ export async function GET(request: NextRequest) {
     if (lang) languageNames = lang
   }
 
-  if (purchase.status === 'completed') after(async () => { await Promise.allSettled([flushPurchaseEmails(sb, purchaseId), flushTikTokPurchases(sb, purchaseId)]) })
+  if (purchase.status === 'completed') after(() => flushPurchaseEmails(sb, purchaseId))
   const { user_id: _owner, ...visiblePurchase } = purchase
   return NextResponse.json({ data: { ...visiblePurchase, tracking_id: snapOrderId(purchase), language_name_ar: languageNames?.name_ar ?? null, language_name_en: languageNames?.name_en ?? null } })
 }
