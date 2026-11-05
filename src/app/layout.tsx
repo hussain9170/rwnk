@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { tajawal } from '@/lib/font'
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
 import MetaPixel from '@/components/analytics/MetaPixel'
+import TikTokPixel from '@/components/analytics/TikTokPixel'
 import './globals.css'
 import { SITE_URL, SHARE_IMAGE, PRODUCT_NAME } from '@/lib/seo'
 
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <GoogleAnalytics />
         <MetaPixel />
+        <TikTokPixel />
         {children}
       </body>
     </html>
