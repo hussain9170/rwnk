@@ -53,7 +53,18 @@ export function tiktokTracker() {
   return queue
 }
 
-export function trackTikTokCheckout(currency: string, value: number) {
-  if (!Number.isFinite(value) || value < 0 || !/^[A-Z]{3}$/.test(currency)) return
-  tiktokTracker()?.track?.('InitiateCheckout', { currency, value })
+function productProperties(currency: string, value: number, productId: string) {
+  if (!Number.isFinite(value) || value < 0 || !/^[A-Z]{3}$/.test(currency) || !/^[a-z0-9_-]{1,128}$/i.test(productId)) return null
+  return { currency, value, content_ids: [productId], content_type: 'product', quantity: 1,
+    contents: [{ content_id: productId, content_type: 'product', quantity: 1, price: value }] }
+}
+
+export function trackTikTokViewContent(currency: string, value: number, productId: string) {
+  const properties = productProperties(currency, value, productId)
+  if (properties) tiktokTracker()?.track?.('ViewContent', properties)
+}
+
+export function trackTikTokCheckout(currency: string, value: number, productId: string) {
+  const properties = productProperties(currency, value, productId)
+  if (properties) tiktokTracker()?.track?.('InitiateCheckout', properties)
 }

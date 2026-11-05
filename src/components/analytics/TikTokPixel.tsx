@@ -24,7 +24,6 @@ function Pixel() {
     const page = `${pathname}?${search}`
     if (lastPage.current !== page) {
       tracker.page?.()
-      if (pathname === '/checkout') tracker.track?.('ViewContent', { content_type: 'product', content_name: 'دليل رونق لتدريب العاملة وتنظيم البيت' })
       lastPage.current = page
     }
   }, [pathname, search])

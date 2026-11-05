@@ -10,7 +10,7 @@ import type { BookLanguage } from '@/types'
 import { isValidEmail } from '@/lib/validation'
 import { trackViewItem, trackSelectLanguage, trackBeginCheckout, trackAddPaymentInfo } from '@/lib/gtag'
 import { trackSnapCheckout } from '@/lib/snap-client'
-import { trackTikTokCheckout } from '@/lib/tiktok-client'
+import { trackTikTokCheckout, trackTikTokViewContent } from '@/lib/tiktok-client'
 import { PolicyConsent } from '@/components/ui/PolicyConsent'
 import { POLICY_VERSION } from '@/lib/policy-consent'
 
@@ -43,6 +43,7 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
 
   useEffect(() => {
     function init() {
+      trackTikTokViewContent(settings.product_currency, settings.product_price, settings.product_id)
       trackViewItem({ item_id: settings.product_id, item_name: settings.product_name, price: settings.product_price }, settings.product_currency)
       const params = new URLSearchParams(window.location.search)
       const err = params.get('error')
@@ -69,7 +70,7 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
     const item = { item_id: settings.product_id, item_name: settings.product_name, price: settings.product_price, book_language: bookLanguage }
     trackBeginCheckout(item, settings.product_currency)
     trackSnapCheckout(settings.product_currency, settings.product_price)
-    trackTikTokCheckout(settings.product_currency, settings.product_price)
+    trackTikTokCheckout(settings.product_currency, settings.product_price, settings.product_id)
 
     try {
       const checkoutRes = await fetch('/api/checkout', {
