@@ -10,7 +10,7 @@ type TikTokQueue = unknown[][] & {
   methods?: string[]
   setAndDefer?: (target: unknown[][], method: string) => void
   instance?: (code: string) => unknown[][]
-  _i?: Record<string, unknown[] & { _u?: string }>
+  _i?: Record<string, unknown[][] & { _u?: string }>
   _t?: Record<string, number>
   _o?: Record<string, Record<string, unknown>>
 }
