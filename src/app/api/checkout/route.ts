@@ -1,4 +1,3 @@
-import { TIKTOK_PURCHASE_CONSENT_VERSION } from '@/lib/tiktok-events'
 import { createPurchaseAccess } from '@/lib/purchase-access'
 import { publicRateLimit } from '@/lib/public-rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
@@ -149,20 +148,6 @@ export async function POST(request: NextRequest) {
       })
       if (error) console.warn('[snap/consent] receipt not recorded', error.code)
     } catch { console.warn('[snap/consent] unavailable; checkout unaffected') }
-  }
-
-  // Optional per-order advertising consent; never block checkout on tracking failure.
-  if (body.tiktokPurchaseConsent === true && request.headers.get('sec-gpc') !== '1' && process.env.TIKTOK_EVENTS_ACCESS_TOKEN) {
-    try {
-      const rawTtp = request.cookies.get('_ttp')?.value ?? ''
-      const { error } = await sb.from('tiktok_purchase_outbox').insert({
-        purchase_id: purchase.id, consent_version: TIKTOK_PURCHASE_CONSENT_VERSION,
-        consent_at: new Date().toISOString(),
-        ttp: /^[a-z0-9_.-]{1,256}$/i.test(rawTtp) ? rawTtp : null,
-        client_user_agent: request.headers.get('user-agent')?.replace(/[\r\n]/g, '').slice(0, 1024) || null,
-      })
-      if (error) console.warn('[tiktok/events] consent not recorded', error.code)
-    } catch { console.warn('[tiktok/events] queue unavailable; checkout unaffected') }
   }
 
   return NextResponse.json({ purchaseId: purchase.id, access: createPurchaseAccess(purchase.id), amount: purchase.amount, currency: purchase.currency })
