@@ -1,3 +1,4 @@
+import { flushTikTokPurchases } from '@/lib/tiktok-events'
 import { flushPurchaseEmails } from '@/lib/purchase-mail-queue'
 import { publicRateLimit } from '@/lib/public-rate-limit'
 import { purchaseSuccessUrl, verifyPurchaseAccess } from '@/lib/purchase-access'
@@ -268,7 +269,7 @@ async function verifyAndFinalize(
     const decision = decideFinalize(purchase.status, { status: 'pending', matchesPurchase: false, paymentMethod: null, raw: null })
     console.log(`[payment/callback] purchase ${purchaseId} already finalized as ${purchase.status} — idempotent no-op, not re-verifying with the gateway`)
     if (decision.resultStatus === 'completed') {
-      if (purchase.status === 'completed') after(async () => { await Promise.allSettled([flushSnapPurchases(sb, purchaseId), flushPurchaseEmails(sb, purchaseId)]) })
+      if (purchase.status === 'completed') after(async () => { await Promise.allSettled([flushTikTokPurchases(sb, purchaseId), flushSnapPurchases(sb, purchaseId), flushPurchaseEmails(sb, purchaseId)]) })
       const linked = await ensureUserLinked(sb, purchase)
       return { status: 'completed', userId: linked?.userId ?? purchase.user_id ?? null, email: linked?.email ?? purchase.email ?? null }
     }
@@ -341,7 +342,7 @@ async function verifyAndFinalize(
     console.log(`[payment/callback] purchase ${purchaseId} was already transitioned by a concurrent request — re-reading its final state`)
     const { data: settled } = await sb.from('purchases').select('status,user_id,email').eq('id', purchaseId).single()
     if (settled?.status === 'completed') {
-      after(async () => { await Promise.allSettled([flushSnapPurchases(sb, purchaseId), flushPurchaseEmails(sb, purchaseId)]) })
+      after(async () => { await Promise.allSettled([flushTikTokPurchases(sb, purchaseId), flushSnapPurchases(sb, purchaseId), flushPurchaseEmails(sb, purchaseId)]) })
       const linked = await ensureUserLinked(sb, { id: purchaseId, user_id: settled.user_id, email: settled.email })
       return { status: 'completed', userId: linked?.userId ?? settled.user_id ?? null, email: linked?.email ?? settled.email ?? null }
     }
@@ -351,7 +352,7 @@ async function verifyAndFinalize(
   console.log(`[payment/callback] purchase ${purchaseId} → status=${decision.resultStatus}${decision.resultStatus === 'completed' ? ` paid_at=${decision.update?.paid_at} payment_method=${decision.update?.payment_method ?? '(unchanged)'}` : ''}`)
 
   if (decision.resultStatus === 'completed') {
-    after(async () => { await Promise.allSettled([flushSnapPurchases(sb, purchaseId), flushPurchaseEmails(sb, purchaseId)]) })
+    after(async () => { await Promise.allSettled([flushTikTokPurchases(sb, purchaseId), flushSnapPurchases(sb, purchaseId), flushPurchaseEmails(sb, purchaseId)]) })
     // This call's own CAS update just flipped pending -> completed — the
     // ONE moment notifyPurchaseCompleted (download token + confirmation
     // email) is allowed to fire for this purchase, ever.
