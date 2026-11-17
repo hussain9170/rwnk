@@ -3,9 +3,12 @@ const fs = require('node:fs')
 const vm = require('node:vm')
 const ts = require('typescript')
 const mod = { exports: {} }
+const consent = { exports: {} }
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/tiktok-consent.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: consent.exports })
+const loadModule = name => name === './tiktok-consent' ? consent.exports : require(name)
 const env = { TIKTOK_EVENTS_ACCESS_TOKEN: 'secret-for-tests-only' }
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/tiktok-events.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText,
-  { exports: mod.exports, require, process: { env }, Date, AbortSignal, fetch, console })
+  { exports: mod.exports, require: loadModule, process: { env }, Date, AbortSignal, fetch, console })
 const { buildTikTokPurchase, flushTikTokPurchases } = mod.exports
 const now = Date.now()
 const p = { id: 'private-purchase-id', status: 'completed', amount: 5, currency: 'KWD', email: ' Customer@Example.com ', paid_at: new Date(now - 1000).toISOString(), product_id: 'rwnak-guide' }
@@ -21,11 +24,13 @@ assert.ok(!JSON.stringify(event).includes(p.id)); assert.ok(!JSON.stringify(even
 for (const patch of [{status:'pending'},{status:'failed'},{status:'refunded'},{amount:NaN},{amount:0},{paid_at:null},{paid_at:new Date(now+1000).toISOString()},{paid_at:new Date(now-7*86400000).toISOString()},{product_id:null},{email:'bad'}]) assert.equal(buildTikTokPurchase({...p,...patch},receipt,now),null,JSON.stringify(patch))
 for (const patch of [{revoked_at:new Date().toISOString()},{consent_version:'other'},{purchase_id:'wrong'},{consent_at:new Date(now).toISOString()}]) assert.equal(buildTikTokPurchase(p,{...receipt,...patch},now),null)
 
-function fakeDb() {
+function fakeDb(outboxReceipt = receipt, activeConsent = false) {
   const state = { sent: false, leased: false, updates: [] }
-  return { state, rpc: async () => ({ data: state.sent || state.leased ? [] : (state.leased=true,[receipt]), error: null }),
+  return { state, rpc: async () => ({ data: state.sent || state.leased ? [] : (state.leased=true,[outboxReceipt]), error: null }),
     from: table => {
-      const q = { select: () => q, eq: () => q, single: async () => ({ data: table === 'purchases' ? p : { revoked_at: null } }),
+      const q = { select: () => q, eq: () => q, is: () => q, gt: () => q,
+        maybeSingle: async () => ({ data: table === 'tiktok_consent_receipts' && activeConsent ? { id: outboxReceipt.settings_consent_id } : null }),
+        single: async () => ({ data: table === 'purchases' ? p : { revoked_at: null } }),
         update: values => { state.updates.push(values); if (values.sent_at) state.sent=true; return q }, lt: () => Promise.resolve({error:null}),
         then: resolve => resolve({error:null}) }
       return q
@@ -46,8 +51,11 @@ function fakeDb() {
   const networkDb=fakeDb()
   assert.equal((await flushTikTokPurchases(networkDb,null,async()=>{throw new Error('offline')})).failed,1)
   assert.equal(networkDb.state.sent,false)
+  const settingsReceipt = { ...receipt, consent_version: 'tiktok-settings-v1', settings_consent_id: 'settings-id' }
+  assert.equal((await flushTikTokPurchases(fakeDb(settingsReceipt), null, send)).sent, 0, 'no delivery for revoked, expired or missing settings consent')
+  assert.equal((await flushTikTokPurchases(fakeDb(settingsReceipt, true), null, send)).sent, 1, 'active settings consent permits delivery')
   delete env.TIKTOK_EVENTS_ACCESS_TOKEN
   assert.equal((await flushTikTokPurchases(fakeDb(),null,send)).configured,false)
-  assert.equal(calls,2)
+  assert.equal(calls,3)
   console.log('PASS: verified paid orders only, consent/revocation, no raw email or bearer IDs, stable dedup IDs, API result handling, retry and token guard')
 })().catch(e=>{console.error(e);process.exitCode=1})

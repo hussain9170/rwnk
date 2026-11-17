@@ -3,12 +3,24 @@ const fs = require('node:fs')
 const vm = require('node:vm')
 const ts = require('typescript')
 const window = { location: { href: 'https://www.rwnak.net/checkout?lang=ar', origin: 'https://www.rwnak.net' } }
-const document = { referrer: 'https://www.rwnak.net/' }
+const document = { cookie: '', referrer: 'https://www.rwnak.net/' }
 const mod = { exports: {} }
-vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/tiktok-client.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, { exports: mod.exports, window, document, URL, Date })
+const consent = { exports: {} }
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/tiktok-consent.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: consent.exports })
+const loadModule = name => {
+  assert.equal(name, './tiktok-consent')
+  return consent.exports
+}
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/tiktok-client.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, { exports: mod.exports, require: loadModule, window, document, URL, Date })
 const { isPublicTikTokUrl, tiktokTracker, trackTikTokCheckout, TIKTOK_PIXEL_CODE } = mod.exports
 for (const url of ['/', '/checkout?lang=ar', '/checkout?lang=si', '/?ttclid=abc-123', '/?utm_source=tiktok', '/privacy']) assert.equal(isPublicTikTokUrl(url), true, url)
 for (const url of ['/success?purchaseId=secret&access=secret', '/account', '/login', '/api/purchase-status', '/newsletter/confirm?token=secret', '/checkout?access=secret', '/checkout?email=a@example.com', '/?unknown=secret', '/?ttclid=a@example.com', '/checkout#token', '/%61dmin', '/%E0%A4%A']) assert.equal(isPublicTikTokUrl(url), false, url)
+trackTikTokCheckout('KWD', 5, 'rwnak-guide')
+assert.equal(window.ttq, undefined, 'no SDK queue without an affirmative choice')
+document.cookie = 'rwnak_tiktok_pixel=1'
+window.navigator = { globalPrivacyControl: true }
+assert.equal(tiktokTracker(), null, 'GPC overrides consent')
+window.navigator.globalPrivacyControl = false
 trackTikTokCheckout('KWD', 5, 'rwnak-guide')
 assert.equal(window.ttq.length, 1, 'queues checkout before SDK download')
 assert.equal(window.ttq[0][0], 'track')
@@ -41,4 +53,7 @@ document.referrer = ''; window.location.href = 'https://www.rwnak.net/checkout?a
 trackTikTokCheckout('KWD', 5, 'rwnak-guide')
 assert.equal(delivered.length, 1, 'private URL blocks events')
 assert.ok(!JSON.stringify(window.ttq).includes('secret'))
+window.location.href = 'https://www.rwnak.net/checkout'
+document.cookie = ''
+assert.equal(tiktokTracker(), null, 'revocation gates an initialized tracker')
 console.log('PASS: private URLs/referrers excluded, single initialization, SDK queue, KWD checkout values, no private data')

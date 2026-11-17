@@ -1,3 +1,5 @@
+import { allowsTikTokPixel } from './tiktok-consent'
+
 // Public pixel code, not an API credential. Never load this SDK on receipt,
 // authentication or account URLs: those may contain download/access tokens.
 export const TIKTOK_PIXEL_CODE = 'DBMFUP3C77UA5QM455NG'
@@ -28,8 +30,12 @@ export function isPublicTikTokUrl(raw: string, origin = 'https://www.rwnak.net')
   } catch { return false }
 }
 
+export function hasTikTokPixelConsent() {
+  return typeof document !== 'undefined' && allowsTikTokPixel(document.cookie, (window.navigator as Navigator & { globalPrivacyControl?: boolean })?.globalPrivacyControl)
+}
+
 export function tiktokTracker() {
-  if (typeof window === 'undefined' || !isPublicTikTokUrl(window.location.href) || !isPublicTikTokUrl(document.referrer)) return null
+  if (!hasTikTokPixelConsent() || !isPublicTikTokUrl(window.location.href) || !isPublicTikTokUrl(document.referrer)) return null
   if (window.ttq) return window.ttq
   window.TiktokAnalyticsObject = 'ttq'
   const queue: TikTokQueue = []

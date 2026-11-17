@@ -45,6 +45,7 @@ const response={json:(data,opts)=>({data,...opts})}
     const sb={from(){const q={select(){return q},eq(){return q},async single(){return{data,error:null}}};return q}}
     const route=load('src/app/api/purchase-status/route.ts',{
       '@/lib/purchase-access':{purchaseReader:async()=>reader},'@/lib/public-rate-limit':{publicRateLimit:async()=>null},
+      '@/lib/tiktok-events':{flushTikTokPurchases:async()=>{}},
       '@/lib/purchase-mail-queue':{flushPurchaseEmails:async()=>{}},'next/server':{NextResponse:response,after:()=>{}},
       '@/lib/env':{getSupabaseServerEnv:()=>({url:'https://db.test',key:'test'})},'@/lib/snap-capi':{snapOrderId:()=> 'public-invoice'},
       '@supabase/supabase-js':{createClient:()=>sb}
@@ -69,6 +70,7 @@ const response={json:(data,opts)=>({data,...opts})}
   const callbackDb={from(){const q={select(){return q},eq(){return q},async single(){return{data:callbackPurchase,error:null}}};return q}}
   const callback=load('src/app/api/payment/callback/route.ts',{
     '@/lib/purchase-access':access,'@/lib/public-rate-limit':{publicRateLimit:async()=>null},
+    '@/lib/tiktok-events':{flushTikTokPurchases:async()=>{}},
     '@/lib/purchase-mail-queue':{flushPurchaseEmails:async()=>({available:false})},
     'next/server':{NextResponse:{...response,redirect:url=>({url})},after:()=>{}},
     '@/lib/snap-capi':{flushSnapPurchases:async()=>{}},'@/lib/env':{getSupabaseServerEnv:()=>({url:'https://db.test',key:'test'})},

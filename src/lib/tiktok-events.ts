@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { TIKTOK_SETTINGS_CONSENT_VERSION } from './tiktok-consent'
 
 const PIXEL_CODE = 'DBMFUP3C77UA5QM455NG'
 export const TIKTOK_PURCHASE_CONSENT_VERSION = 'tiktok-purchase-v1'
@@ -9,7 +10,7 @@ export interface TikTokPurchase {
 }
 export interface TikTokReceipt {
   purchase_id: string; consent_version: string; consent_at: string
-  revoked_at: string | null; ttp: string | null; client_user_agent: string | null; lease_id: string
+  revoked_at: string | null; settings_consent_id?: string | null; ttp: string | null; client_user_agent: string | null; lease_id: string
 }
 
 // No access tokens, receipt URLs or raw email go into the advertising payload.
@@ -18,7 +19,7 @@ export function buildTikTokPurchase(p: TikTokPurchase, receipt: TikTokReceipt, n
   const consent = Date.parse(receipt.consent_at)
   const amount = Number(p.amount)
   const email = p.email.trim().toLowerCase()
-  if (p.status !== 'completed' || receipt.purchase_id !== p.id || receipt.revoked_at || receipt.consent_version !== TIKTOK_PURCHASE_CONSENT_VERSION) return null
+  if (p.status !== 'completed' || receipt.purchase_id !== p.id || receipt.revoked_at || ![TIKTOK_PURCHASE_CONSENT_VERSION, TIKTOK_SETTINGS_CONSENT_VERSION].includes(receipt.consent_version)) return null
   if (!Number.isFinite(paid) || !Number.isFinite(consent) || consent > paid || paid > now || now - paid >= 6 * 86400000) return null
   if (!Number.isFinite(amount) || amount <= 0 || !/^[A-Z]{3}$/.test(p.currency) || !p.product_id || !/^[a-z0-9_-]{1,128}$/i.test(p.product_id)) return null
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
@@ -48,7 +49,14 @@ export async function flushTikTokPurchases(sb: SupabaseClient, purchaseId: strin
       try {
         const { data: p } = await sb.from('purchases').select('id,status,email,amount,currency,paid_at,product_id').eq('id', receipt.purchase_id).single()
         const { data: current } = await sb.from('tiktok_purchase_outbox').select('revoked_at').eq('purchase_id', receipt.purchase_id).single()
-        const event = p && current && buildTikTokPurchase(p, { ...receipt, revoked_at: current.revoked_at })
+        if (!p || !current || current.revoked_at) continue
+        if (receipt.consent_version === TIKTOK_SETTINGS_CONSENT_VERSION) {
+          if (!receipt.settings_consent_id) continue
+          const { data: consent } = await sb.from('tiktok_consent_receipts').select('id')
+            .eq('id', receipt.settings_consent_id).is('revoked_at', null).gt('expires_at', new Date().toISOString()).maybeSingle()
+          if (!consent) continue
+        }
+        const event = buildTikTokPurchase(p, receipt)
         if (!event) continue
         const response = await send('https://business-api.tiktok.com/open_api/v1.3/event/track/', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Access-Token': token },

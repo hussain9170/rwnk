@@ -1,4 +1,4 @@
-import { TIKTOK_PURCHASE_CONSENT_VERSION } from '@/lib/tiktok-events'
+import { TIKTOK_CONSENT_COOKIE, TIKTOK_SETTINGS_CONSENT_VERSION, tiktokConsentId } from '@/lib/tiktok-consent'
 import { createPurchaseAccess } from '@/lib/purchase-access'
 import { publicRateLimit } from '@/lib/public-rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
@@ -151,17 +151,24 @@ export async function POST(request: NextRequest) {
     } catch { console.warn('[snap/consent] unavailable; checkout unaffected') }
   }
 
-  // Optional per-order advertising consent; never block checkout on tracking failure.
-  if (body.tiktokPurchaseConsent === true && request.headers.get('sec-gpc') !== '1' && process.env.TIKTOK_EVENTS_ACCESS_TOKEN) {
+  // Advertising is optional. Only a current consent receipt can queue a new order.
+  const tiktokConsent = tiktokConsentId(request.cookies.get(TIKTOK_CONSENT_COOKIE)?.value)
+  if (tiktokConsent && request.headers.get('sec-gpc') !== '1' && process.env.TIKTOK_EVENTS_ACCESS_TOKEN) {
     try {
-      const rawTtp = request.cookies.get('_ttp')?.value ?? ''
-      const { error } = await sb.from('tiktok_purchase_outbox').insert({
-        purchase_id: purchase.id, consent_version: TIKTOK_PURCHASE_CONSENT_VERSION,
-        consent_at: new Date().toISOString(),
-        ttp: /^[a-z0-9_.-]{1,256}$/i.test(rawTtp) ? rawTtp : null,
-        client_user_agent: request.headers.get('user-agent')?.replace(/[\r\n]/g, '').slice(0, 1024) || null,
-      })
-      if (error) console.warn('[tiktok/events] consent not recorded', error.code)
+      const { data: receipt } = await sb.from('tiktok_consent_receipts').select('granted_at')
+        .eq('id', tiktokConsent).is('revoked_at', null).gt('expires_at', new Date().toISOString()).maybeSingle()
+      if (receipt) {
+        const rawTtp = request.cookies.get('_ttp')?.value ?? ''
+        const { error } = await sb.from('tiktok_purchase_outbox').insert({
+          purchase_id: purchase.id,
+          settings_consent_id: tiktokConsent,
+          consent_version: TIKTOK_SETTINGS_CONSENT_VERSION,
+          consent_at: receipt.granted_at,
+          ttp: /^[a-z0-9_.-]{1,256}$/i.test(rawTtp) ? rawTtp : null,
+          client_user_agent: request.headers.get('user-agent')?.replace(/[\r\n]/g, '').slice(0, 1024) || null,
+        })
+        if (error) console.warn('[tiktok/events] consent not recorded', error.code)
+      }
     } catch { console.warn('[tiktok/events] queue unavailable; checkout unaffected') }
   }
 
