@@ -402,3 +402,8 @@ html:has(.guide-preview-dialog[open]) { overflow: hidden; }
 .auth-shell button { min-height:44px; }
 .auth-shell .auth-form-panel input:not([type=checkbox]) { font-size:16px; min-height:48px; }
 @media (max-width:640px) { .preview-swipe-hint { display:inline; } }
+
+/* Touch targets retain the existing visual identity. */
+.checkout-support { display:inline-flex; align-items:center; min-height:44px; padding-inline:6px; }
+.checkout-back { min-height:44px; padding-block:14px; }
+.navbar-root a { min-height:44px; display:inline-flex; align-items:center; }

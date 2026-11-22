@@ -9,7 +9,7 @@ import type { StoreSettings } from '@/lib/store-settings'
 
 const T1 = '#1A1228', T2 = '#4A4060'
 
-export function LegalPage({ page, settings, children }: { page: PageContent; settings: StoreSettings; children?: ReactNode }) {
+export function LegalPage({ page, settings, children, updated = POLICY_UPDATED }: { page: PageContent; settings: StoreSettings; children?: ReactNode; updated?: string }) {
   const paragraphs = page.content.replace(/\\r\\n|\\n/g, '\n').replace(/\r\n?/g, '\n').replace(/^(أدوات القياس والإعلانات|قوقل|ميتا|خيارات القياس الحالية|سناب|التحكم بسناب|التخزين|طلبات الخصوصية): /gm, '## $1\n').replace(/^(## [^\n]+)\n/gm, '$1\n\n').split(/\n\n+/)
   return (
     <PageShell>
@@ -18,7 +18,7 @@ export function LegalPage({ page, settings, children }: { page: PageContent; set
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbs([{ name: 'الرئيسية', path: '/' }, { name: page.title, path: `/${page.slug}` }])) }} />
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 clamp(20px,6vw,40px)' }}>
           <h1 style={{ fontSize: 'clamp(24px,5.5vw,34px)', fontWeight: 900, marginBottom: 28, color: T1 }}>{page.title}</h1>
-          {page.slug !== 'about' && <p style={{ fontSize: 13, color: T2, marginBottom: 28 }}>آخر تحديث: <time dateTime={POLICY_UPDATED}>١٧ أكتوبر ٢٠٢٦</time></p>}
+          {page.slug !== 'about' && <p style={{ fontSize: 13, color: T2, marginBottom: 28 }}>آخر تحديث: <time dateTime={updated}>{new Intl.DateTimeFormat('ar-KW', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kuwait' }).format(new Date(`${updated}T00:00:00+03:00`))}</time></p>}
           {children}
           {paragraphs.map((p, i) => (
             p.startsWith('## ') ? <h2 key={i} style={{ fontSize: 21, color: T1, marginTop: 30, marginBottom: 12 }}>{p.slice(3)}</h2> :

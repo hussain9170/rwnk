@@ -57,5 +57,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   invalidatePublicContent(resource)
   revalidatePath('/')
   revalidatePath('/faq')
+  if (resource === 'pages') for (const slug of ['about', 'terms', 'refund', 'privacy']) revalidatePath(`/${slug}`)
   return NextResponse.json({ data })
 }

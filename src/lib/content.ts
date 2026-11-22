@@ -70,10 +70,10 @@ export async function getTestimonials(): Promise<Testimonial[]> {
   } catch { return FALLBACK_TESTIMONIALS }
 }
 
-export async function getFaqs(): Promise<Faq[]> {
+export async function getFaqs({ strict = false }: { strict?: boolean } = {}): Promise<Faq[]> {
   try {
     return (await getPublicList<Faq>('faqs')).map(f => ({ ...f, question: f.question.replace(/الكتاب/g, 'الدليل'), answer: f.answer.replace(/الكتاب/g, 'الدليل') }))
-  } catch { return FALLBACK_FAQS.map(f => ({ ...f, question: f.question.replace(/الكتاب/g, 'الدليل'), answer: f.answer.replace(/الكتاب/g, 'الدليل') })) }
+  } catch (error) { if (strict) throw error; return FALLBACK_FAQS.map(f => ({ ...f, question: f.question.replace(/الكتاب/g, 'الدليل'), answer: f.answer.replace(/الكتاب/g, 'الدليل') })) }
 }
 
 export async function getFeatures(): Promise<Feature[]> {
@@ -107,11 +107,12 @@ export async function getBookLanguages({ strict = false }: { strict?: boolean } 
   }
 }
 
-export async function getPage(slug: 'about' | 'terms' | 'privacy' | 'refund'): Promise<PageContent> {
+export async function getPage(slug: 'about' | 'terms' | 'privacy' | 'refund', { strict = false }: { strict?: boolean } = {}): Promise<PageContent> {
   try {
     const sb = await getSb()
     const { data, error } = await sb.from('pages').select('*').eq('slug', slug).single()
+    if (error && strict) throw error
     if (error || !data) return FALLBACK_PAGES[slug]
     return data
-  } catch { return FALLBACK_PAGES[slug] }
+  } catch (error) { if (strict) throw error; return FALLBACK_PAGES[slug] }
 }

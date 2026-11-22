@@ -6,7 +6,7 @@ import { createRequire } from 'node:module'
 import ts from 'typescript'
 const require = createRequire(import.meta.url)
 const policy = { POLICY_VERSION:'2026-10-19', NEWSLETTER_VERSION:'2026-10-19', NEWSLETTER_COPY:'Explicit newsletter consent' }
-let row, sent, calls, failSend, inserted, purchasePayload, rpcResult=true, rpcError=null, lastRpc
+let row, sent, calls, failSend, inserted, purchasePayload, rpcResult=true, rpcError=null, lastRpc, droppedFields=[]
 function reset(status='pending') { row={id:'test-id',email:'test@example.invalid',status,expires_at:new Date(Date.now()+86400000).toISOString()}; sent=[]; calls=[]; failSend=false; inserted=null }
 const db={
  rpc:async(name,args)=>{lastRpc={name,args};return {data:rpcResult,error:rpcError}},
@@ -55,11 +55,13 @@ assert.equal(newsletter.validNewsletterToken('bad'),false); assert.equal(newslet
 const response={json:(body,options={})=>({body,status:options.status??200})}
 const checkout=load('src/app/api/checkout/route.ts',{
  '@/lib/policy-consent':policy,
+ '@/lib/tiktok-consent':{ TIKTOK_CONSENT_COOKIE:'tiktok', TIKTOK_SETTINGS_CONSENT_VERSION:'test', tiktokConsentId:()=>null },
+ '@/lib/snap-attribution':{ SNAP_SOURCE_COOKIE:'source', parseSnapAttribution:()=>null },
  '@/lib/public-rate-limit':{publicRateLimit:async()=>null},
  'next/server':{NextResponse:response},
  '@/lib/purchase-access':{createPurchaseAccess:()=> 'test-access'},
  '@/lib/env':{getSupabaseServerEnv:()=>({url:'https://example.invalid',key:'fake'})},
- '@/lib/db-resilience':{getSingletonRow:async()=>({data:{product_id:'test-product',product_price:5,product_currency:'KWD'},error:null}),insertWithSchemaFallback:async(_db,_table,payload)=>{purchasePayload=payload;return {data:{id:'test-purchase',amount:5,currency:'KWD'},error:null,droppedFields:[]}}},
+ '@/lib/db-resilience':{getSingletonRow:async()=>({data:{product_id:'test-product',product_price:5,product_currency:'KWD'},error:null}),insertWithSchemaFallback:async(_db,_table,payload)=>{purchasePayload=payload;return {data:{id:'test-purchase',amount:5,currency:'KWD'},error:null,droppedFields}}},
  '@/lib/snap-consent':{SNAP_CONSENT_COOKIE:'snap',parseSnapConsent:()=>null},
  '@supabase/supabase-js':{createClient:()=>({from:()=>({select:()=>({eq(){return this},maybeSingle:async()=>({data:{language_code:'ar',file_path:'test.pdf'},error:null})})})})},
 })
@@ -67,6 +69,9 @@ const req=body=>({json:async()=>body,cookies:{get:()=>undefined},headers:new Hea
 assert.equal((await checkout.POST(req({email:'test@example.invalid'}))).status,400)
 assert.equal((await checkout.POST(req({email:'test@example.invalid',policyAccepted:true,policyVersion:'old'}))).status,400)
 assert.equal((await checkout.POST(req({email:'test@example.invalid',bookLanguage:'ar',policyAccepted:true,policyVersion:policy.POLICY_VERSION}))).status,200)
+droppedFields=['book_language']
+assert.equal((await checkout.POST(req({email:'test@example.invalid',bookLanguage:'ar',policyAccepted:true,policyVersion:policy.POLICY_VERSION}))).status,503)
+droppedFields=[]
 assert.equal(purchasePayload.policy_version,policy.POLICY_VERSION); assert(!Number.isNaN(Date.parse(purchasePayload.policy_accepted_at)))
 // Admin exports reject anonymous requests and neutralise spreadsheet formulas.
 let adminAllowed=false, memberReads=0, activeFilter=false

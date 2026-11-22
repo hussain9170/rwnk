@@ -12,15 +12,14 @@ import { arabicNumber } from '@/lib/display'
 
 const P = '#6747B2', T1 = '#1A1228', T2 = '#4A4060'
 
-// Force per-request rendering so admin edits to FAQs/store settings are
-// never stuck behind a stale build-time snapshot — see the detailed
-// comment on this same export in src/app/page.tsx.
-export const dynamic = 'force-dynamic'
+// Public HTML is refreshed by admin invalidation and bounded ISR.
+export const dynamic = 'force-static'
+export const revalidate = 300
 
 export const metadata: Metadata = publicMetadata('أسئلة عن دليل تدريب العاملة والتحميل واللغات', 'إجابات عن شراء دليل رونق الرقمي: اختيار لغة واحدة، استلام ملف PDF بعد الدفع، الطباعة وتحديثات الدليل.', '/faq')
 
 export default async function FaqPage() {
-  const [faqs, settings, languages] = await Promise.all([getFaqs(), getStoreSettings(), getBookLanguages()])
+  const [faqs, settings, languages] = await Promise.all([getFaqs({ strict: true }), getStoreSettings({ strict: true }), getBookLanguages({ strict: true })])
   return (
     <PageShell bg="#FAFAFA">
       <Navbar />

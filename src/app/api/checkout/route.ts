@@ -116,6 +116,9 @@ export async function POST(request: NextRequest) {
   if (droppedFields.length > 0) {
     console.error(`[checkout] purchases columns not found — dropped from insert: ${droppedFields.join(', ')}. The migration in supabase/schema.sql has not been fully run against this database. RUN THE MIGRATION.`)
   }
+  if (droppedFields.includes('book_language')) {
+    return NextResponse.json({ error: 'تعذّر حفظ لغة الطلب. حاولي لاحقاً أو تواصلي مع الدعم.' }, { status: 503 })
+  }
   if (droppedFields.includes('policy_version') || droppedFields.includes('policy_accepted_at')) {
     return NextResponse.json({ error: 'تعذّر حفظ الموافقة. حاولي لاحقاً.' }, { status: 503 })
   }

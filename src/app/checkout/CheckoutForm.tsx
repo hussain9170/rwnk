@@ -12,6 +12,7 @@ import { trackViewItem, trackSelectLanguage, trackBeginCheckout, trackAddPayment
 import { trackSnapCheckout } from '@/lib/snap-client'
 import { trackTikTokCheckout, trackTikTokViewContent } from '@/lib/tiktok-client'
 import { PolicyConsent } from '@/components/ui/PolicyConsent'
+import { createCheckoutSession } from '@/lib/checkout-session'
 import { POLICY_VERSION } from '@/lib/policy-consent'
 
 const P='#6747B2',PL='#EDE8FF',T1='#1A1228',T2='#4A4060',T3='#6B617E',BR='#EDE8F5'
@@ -34,6 +35,8 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
   const [email,setEmail]=useState('')
   const customerName = ''
   const [loading,setLoading]=useState(false)
+  const [slow,setSlow]=useState(false)
+  const checkoutSession = useRef<ReturnType<typeof createCheckoutSession> | null>(null)
   const [error,setError]=useState('')
   const [banner,setBanner]=useState('')
   const [policyAccepted,setPolicyAccepted]=useState(false)
@@ -72,28 +75,18 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
     trackSnapCheckout(settings.product_currency, settings.product_price)
     trackTikTokCheckout(settings.product_currency, settings.product_price, settings.product_id)
 
+    const waiting = setTimeout(() => setSlow(true), 12000)
     try {
-      const checkoutRes = await fetch('/api/checkout', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, customerName, paymentMethod: pm, bookLanguage, expectedPrice: settings.product_price, policyAccepted, policyVersion: POLICY_VERSION }),
-      })
-      const checkoutJson = await checkoutRes.json()
-      if (!checkoutRes.ok) throw new Error(checkoutJson.error ?? 'تعذّر إنشاء الطلب')
-
-      const payRes = await fetch('/api/payment/initiate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ purchaseId: checkoutJson.purchaseId, access: checkoutJson.access }),
-      })
-      const payJson = await payRes.json()
-      if (!payRes.ok || !payJson.paymentUrl) throw new Error(payJson.error ?? 'تعذّر بدء عملية الدفع')
+      checkoutSession.current ??= createCheckoutSession()
+      const paymentUrl = await checkoutSession.current({ email, customerName, paymentMethod: pm, bookLanguage, expectedPrice: settings.product_price, policyAccepted, policyVersion: POLICY_VERSION })
 
       trackAddPaymentInfo(item, settings.product_currency, pm)
-      window.location.href = payJson.paymentUrl
+      window.location.href = paymentUrl
     } catch (err: unknown) {
       setBanner(err instanceof Error ? err.message : 'حدث خطأ غير متوقع، حاولي مرة أخرى')
       submitting.current = false
       setLoading(false)
-    }
+    } finally { clearTimeout(waiting); setSlow(false) }
   }
 
   const price = settings.product_price
@@ -111,6 +104,7 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
         <h1 style={{fontSize:24,fontWeight:900,marginBottom:4,color:T1}}>إتمام الشراء</h1><div className="checkout-brief">دليل رونق · {priceLabel}<span style={{display:'block',fontSize:13}}>نسخة PDF بلغة واحدة · دفعة واحدة</span></div>
         <p style={{fontSize:15,color:T2,marginBottom:24}}>اختاري اللغة، أدخلي بريدج، وكمّلي الدفع.</p>
 
+        {loading && slow && <p role="status" style={{color:T2,lineHeight:1.8,padding:12}}>الاتصال أخذ وقت أطول. ناطرين تجهيز طلبج؛ لا تعيدين تحميل الصفحة. للمساعدة: <a className="checkout-support" href={`mailto:${settings.email}`}>{settings.email}</a></p>}
         {banner && (
           <div role="alert" style={{background:'#FEF2F2',border:'1px solid #FECACA',borderRadius:12,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#A32D2D',lineHeight:1.6}}>
             {banner}
@@ -122,7 +116,7 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
           <p style={{fontSize:14,color:T2,lineHeight:1.8,marginBottom:14}}>يشمل الطلب نسخة واحدة باللغة المختارة بسعر {priceLabel}، وليس جميع اللغات.</p>
           <div className="checkout-lang-grid" role="radiogroup" aria-label="لغة الدليل" aria-required="true" aria-invalid={!!languageError} aria-describedby={languageError?'checkout-language-error':undefined} style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:8}}>
             {languages.map((l,index)=>(
-              <button key={l.language_code} type="button" role="radio" aria-checked={bookLanguage===l.language_code} tabIndex={bookLanguage===l.language_code||(!bookLanguage&&index===0)?0:-1} onKeyDown={e=>{
+              <button key={l.language_code} type="button" disabled={loading} role="radio" aria-checked={bookLanguage===l.language_code} tabIndex={bookLanguage===l.language_code||(!bookLanguage&&index===0)?0:-1} onKeyDown={e=>{
                 const keys=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End']; if(!keys.includes(e.key)) return; e.preventDefault();
                 const i=languages.findIndex(x=>x.language_code===l.language_code);
                 const next=e.key==='Home'?0:e.key==='End'?languages.length-1:(i+(['ArrowLeft','ArrowDown'].includes(e.key)?1:-1)+languages.length)%languages.length;
@@ -140,7 +134,7 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
 
         <div style={{background:'#fff',border:`1px solid ${BR}`,borderRadius:16,padding:20,marginBottom:14}}>
           <label htmlFor="checkout-email" style={{display:'block',fontSize:12,fontWeight:900,color:P,textTransform:'uppercase',marginBottom:14}}>بريدك الإلكتروني</label>
-          <input id="checkout-email" type="email" placeholder="example@email.com" dir="ltr" autoComplete="email" required
+          <input id="checkout-email" disabled={loading} type="email" placeholder="example@email.com" dir="ltr" autoComplete="email" required
             value={email} onChange={e=>{setEmail(e.target.value); if(error) setError('')}} onFocus={focus} onBlur={blur}
             aria-invalid={!!error} aria-describedby={error?'checkout-email-error':undefined}
             style={inp}/>
@@ -202,9 +196,9 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
         <button type="submit" disabled={loading || !languages.length} aria-busy={loading} style={{width:'100%',height:52,background:loading?'#8b6dd4':P,color:'#fff',border:'none',borderRadius:12,fontSize:15,fontWeight:900,cursor:loading?'wait':'pointer',fontFamily:"var(--font-tajawal),'Segoe UI',Tahoma,'Geeza Pro',Arial,sans-serif",boxShadow:'0 2px 12px rgba(103,71,178,.28)'}}>
           {loading?'جاري التحويل لبوابة الدفع...':`ادفعي الآن — ${priceLabel}`}
         </button>
-        <p style={{textAlign:'center',fontSize:12,color:T3,marginTop:12}}>للمساعدة: <a href={`mailto:${settings.email}`} dir="ltr" style={{color:P,textDecoration:'underline'}}>{settings.email}</a></p>
+        <p style={{textAlign:'center',fontSize:12,color:T3,marginTop:12}}>للمساعدة: <a className="checkout-support" href={`mailto:${settings.email}`} dir="ltr" style={{color:P,textDecoration:'underline'}}>{settings.email}</a></p>
         <div style={{flex:1}}/>
-        <Link href="/" style={{display:'block',textAlign:'center',fontSize:12,color:T3,marginTop:20,textDecoration:'none'}}>← العودة للرئيسية</Link>
+        <Link className="checkout-back" href="/" style={{display:'block',textAlign:'center',fontSize:12,color:T3,marginTop:20,textDecoration:'none'}}>← العودة للرئيسية</Link>
       </div>
     </form></main>
   )

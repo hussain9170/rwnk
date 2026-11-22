@@ -13,7 +13,8 @@ async function main() {
     state.reads.push(table)
     res.setHeader('content-type','application/json')
     const rows = table === 'store_settings' ? [{product_price:state.price,product_original_price:12,hero_badge:state.badge,testimonials_visible:false}]
-      : table === 'book_languages' ? state.languages : []
+      : table === 'book_languages' ? state.languages
+      : table === 'pages' ? {slug:new URL(req.url,'http://localhost').searchParams.get('slug')?.replace('eq.','') || 'about',title:'Fixture page',content:'Fixture public content'} : []
     res.end(JSON.stringify(rows))
   })
   await new Promise(resolve => db.listen(0,'127.0.0.1',resolve))
@@ -29,6 +30,8 @@ async function main() {
     assert.equal(await new Promise(resolve => build.on('exit',resolve)),0,'fixture production build must pass (see /tmp/rwnak-homepage-cache-next.log)')
     const manifest = JSON.parse(fs.readFileSync('.next/prerender-manifest.json','utf8'))
     assert.equal(manifest.routes['/'].initialRevalidateSeconds,300,'homepage must be ISR, not request-rendered')
+    for (const path of ['/about','/terms','/refund','/faq']) assert.equal(manifest.routes[path]?.initialRevalidateSeconds,300,`${path} must use bounded ISR`)
+    assert(!manifest.routes['/privacy'], 'privacy preferences must stay request-rendered')
     app = spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port',String(appPort)],{env,stdio:['ignore',log,log]})
     const url = `http://127.0.0.1:${appPort}`
     for(let attempt=0;attempt<50;attempt++) {

@@ -10,6 +10,7 @@ function revalidateFor(resource: string, id: string) {
   invalidatePublicContent(resource)
   revalidatePath('/')
   revalidatePath('/faq')
+  if (resource === 'pages') for (const slug of ['about', 'terms', 'refund', 'privacy']) revalidatePath(`/${slug}`)
   if (resource === 'pages' && ['about', 'terms', 'privacy', 'refund'].includes(id)) revalidatePath(`/${id}`)
 }
 
