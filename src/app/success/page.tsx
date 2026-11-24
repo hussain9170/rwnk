@@ -12,6 +12,7 @@ import {
   IconCircleCheck, IconDownload, IconArrowRight,
   IconFileText, IconLock, IconAlertTriangle,
 } from '@tabler/icons-react'
+import { trackMetaPurchase } from '@/lib/meta-client'
 import { trackPurchase, trackDownloadBook, hasTrackedPurchase, markPurchaseTracked } from '@/lib/gtag'
 
 interface PurchaseInfo {
@@ -126,6 +127,14 @@ export default function SuccessPage() {
     })
     markPurchaseTracked(info.id)
   }, [step, info, settingsLoaded, settings])
+
+  // Only trusted completed status/amount/currency from the protected API.
+  // Independent of GA's guard; no receipt credentials leave this document.
+  useEffect(() => {
+    if (step !== 'success' || !info || !settingsLoaded) return
+    trackMetaPurchase({ status: info.status, tracking_id: info.tracking_id, amount: info.amount,
+      currency: info.currency, product_id: info.product_id ?? settings.product_id, created_at: info.created_at })
+  }, [step, info, settingsLoaded, settings.product_id])
 
   async function handleDownload() {
     if (!info?.id) return

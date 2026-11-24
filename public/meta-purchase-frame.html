@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Purchase measurement</title></head><body>
+<script>
+(function () {
+  'use strict';
+  if (window.parent === window) return;
+  var pixelId = '850585977987749';
+  var parentOrigin = new URL(window.location.href).origin;
+  var accepted = false;
+  window.addEventListener('message', function (event) {
+    if (accepted || event.source !== window.parent || event.origin !== parentOrigin) return;
+    var message = event.data;
+    var p = message && message.properties;
+    if (!message || message.type !== 'rwnak-meta-purchase' || !/^rwnak_purchase_[a-z0-9_-]{1,128}$/i.test(message.eventId)) return;
+    if (!p || typeof p.value !== 'number' || !Number.isFinite(p.value) || p.value < 0 || !/^[A-Z]{3}$/.test(p.currency)) return;
+    if (!Array.isArray(p.content_ids) || p.content_ids.length !== 1 || typeof p.content_ids[0] !== 'string' || !/^[a-z0-9_-]{1,128}$/i.test(p.content_ids[0])) return;
+    accepted = true;
+    // Reconstruct the payload: never forward arbitrary parent properties.
+    var data = { currency: p.currency, value: p.value, content_ids: [p.content_ids[0]], content_type: 'product', num_items: 1,
+      contents: [{ id: p.content_ids[0], quantity: 1, item_price: p.value }] };
+    var fbq = function () { if (fbq.callMethod) fbq.callMethod.apply(fbq, arguments); else fbq.queue.push(Array.from(arguments)); };
+    fbq.queue = []; fbq.push = fbq; fbq.loaded = true; fbq.version = '2.0'; fbq.disablePushState = true;
+    window.fbq = window._fbq = fbq;
+    fbq('set', 'autoConfig', false, pixelId);
+    fbq('init', pixelId);
+    var script = document.createElement('script');
+    script.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    script.referrerPolicy = 'no-referrer';
+    script.onload = function () {
+      if (typeof fbq.callMethod !== 'function') return;
+      fbq('trackSingle', pixelId, 'Purchase', data, { eventID: message.eventId });
+      window.parent.postMessage({ type: 'rwnak-meta-dispatched', eventId: message.eventId }, parentOrigin);
+    };
+    document.head.appendChild(script);
+  });
+  window.parent.postMessage({ type: 'rwnak-meta-ready' }, parentOrigin);
+})();
+</script></body></html>

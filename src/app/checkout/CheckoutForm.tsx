@@ -11,6 +11,7 @@ import { isValidEmail } from '@/lib/validation'
 import { trackViewItem, trackSelectLanguage, trackBeginCheckout, trackAddPaymentInfo } from '@/lib/gtag'
 import { trackSnapCheckout } from '@/lib/snap-client'
 import { trackTikTokCheckout, trackTikTokViewContent } from '@/lib/tiktok-client'
+import { trackMetaCheckout, trackMetaViewContent } from '@/lib/meta-client'
 import { PolicyConsent } from '@/components/ui/PolicyConsent'
 import { createCheckoutSession } from '@/lib/checkout-session'
 import { POLICY_VERSION } from '@/lib/policy-consent'
@@ -43,9 +44,15 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
   const [policyError,setPolicyError]=useState('')
   const submitting = useRef(false)
   const policyField = useRef<HTMLDivElement>(null)
+  const metaViewSent = useRef(false)
+  const metaCheckoutSent = useRef(false)
 
   useEffect(() => {
     function init() {
+      if (!metaViewSent.current) {
+        trackMetaViewContent(settings.product_currency, settings.product_price, settings.product_id)
+        metaViewSent.current = true
+      }
       trackTikTokViewContent(settings.product_currency, settings.product_price, settings.product_id)
       trackViewItem({ item_id: settings.product_id, item_name: settings.product_name, price: settings.product_price }, settings.product_currency)
       const params = new URLSearchParams(window.location.search)
@@ -72,6 +79,10 @@ export default function CheckoutForm({ settings, languages, initialLanguage = ''
 
     const item = { item_id: settings.product_id, item_name: settings.product_name, price: settings.product_price, book_language: bookLanguage }
     trackBeginCheckout(item, settings.product_currency)
+    if (!metaCheckoutSent.current) {
+      trackMetaCheckout(settings.product_currency, settings.product_price, settings.product_id)
+      metaCheckoutSent.current = true
+    }
     trackSnapCheckout(settings.product_currency, settings.product_price)
     trackTikTokCheckout(settings.product_currency, settings.product_price, settings.product_id)
 
