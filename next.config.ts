@@ -29,6 +29,13 @@ const nextConfig: NextConfig = {
       ] },
       { source: '/api/:path*', headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'Referrer-Policy', value: 'no-referrer' }] },
       { source: '/success', headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'Referrer-Policy', value: 'no-referrer' }] },
+      // Only this credential-free static document may be framed by our site.
+      { source: '/meta-purchase-frame.html', headers: [
+        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        { key: 'Referrer-Policy', value: 'no-referrer' },
+        { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        { key: 'Content-Security-Policy', value: "default-src 'none'; script-src 'unsafe-inline' https://connect.facebook.net; connect-src https://*.facebook.com https://*.facebook.net; img-src https://*.facebook.com https://*.facebook.net data:; frame-ancestors 'self'; sandbox allow-scripts; base-uri 'none'; form-action 'none'" },
+      ] },
     ]
   },
   // A lockfile in a parent folder (outside this repo) made Next guess the
